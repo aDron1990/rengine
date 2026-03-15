@@ -22,16 +22,22 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle) {
 }
 
 float vertices[] = {
-	-0.5f, -0.5f, 0.0f,
-	 0.5f, -0.5f, 0.0f,
-	 0.0f,  0.5f, 0.0f
+	 0.5f,  0.5f, 0.0f,  // top right
+	 0.5f, -0.5f, 0.0f,  // bottom right
+	-0.5f, -0.5f, 0.0f,  // bottom left
+	-0.5f,  0.5f, 0.0f   // top left 
+};
+unsigned int indices[] = {  // note that we start from 0!
+	0, 1, 3,   // first triangle
+	1, 2, 3    // second triangle
 };
 
 void App::run() {
 	VertexArray vao;
 	vao.bind();
 
-	VertexBuffer buffer{ vertices, sizeof(vertices) };
+	VertexBuffer vbo{ vertices, sizeof(vertices) };
+	IndexBuffer ebo{ indices, sizeof(indices) };
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -47,7 +53,7 @@ void App::run() {
 		
 		shader.use();
 		vao.bind();
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(m_window.get());
 	}
