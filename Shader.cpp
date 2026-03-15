@@ -1,0 +1,49 @@
+#include "Shader.hpp"
+
+Shader::Shader(const std::filesystem::path vertexFilePath, const std::filesystem::path fragmentFilePath) 
+	: m_program{glCreateProgram()} {
+	auto vertexCode = loadFile(vertexFilePath);
+	auto fragmentCode = loadFile(fragmentFilePath);
+
+	auto vertex = compileShader(vertexCode, GL_VERTEX_SHADER);
+	auto fragment = compileShader(fragmentCode, GL_FRAGMENT_SHADER);
+
+	linkProgram(vertex, fragment);
+}
+
+GlShader Shader::compileShader(const std::string& code, GLenum shaderType) {
+	int success;
+	char infoLog[512];
+	auto* codePtr = code.c_str();
+
+	GLuint shader;
+	shader = glCreateShader(shaderType);
+	glShaderSource(shader, 1, &codePtr, nullptr);
+	glCompileShader(shader);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+		glDeleteShader(shader);
+		throw std::runtime_error{ infoLog };
+	}
+
+	return GlShader{ shader };
+}
+
+void Shader::linkProgram(const GlShader& vertex, const GlShader& fragment) {
+	int success;
+	char infoLog[512];
+
+	glAttachShader(m_program.get(), vertex.get());
+	glAttachShader(m_program.get(), fragment.get());
+	glLinkProgram(m_program.get());
+	glGetProgramiv(m_program.get(), GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(m_program.get(), 512, NULL, infoLog);
+		throw std::runtime_error{ infoLog };
+	}
+}
+
+void Shader::use() const noexcept {
+	glUseProgram(m_program.get());
+}

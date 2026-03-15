@@ -1,4 +1,5 @@
 #include "App.hpp"
+#include "Shader.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -53,53 +54,14 @@ void App::run() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// shader
-	int success;
-	char infoLog[512];
-
-	// vertex
-	GLuint vertex;
-	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, 1, &vertexShaderSource, nullptr);
-	glCompileShader(vertex);
-	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
-		throw std::runtime_error{ infoLog };
-	}
-	
-	// fragment
-	GLuint fragment;
-	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, 1, &fragmentShaderSource, nullptr);
-	glCompileShader(fragment);
-	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
-		throw std::runtime_error{ infoLog };
-	}
-
-	// program
-	GLuint program;
-	program = glCreateProgram();
-	glAttachShader(program, vertex);
-	glAttachShader(program, fragment);
-	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(program, 512, NULL, infoLog);
-		throw std::runtime_error{ infoLog };
-	}
-
-	glDeleteShader(vertex);
-	glDeleteShader(fragment);
+	Shader shader{ "main_v.glsl", "main_f.glsl" };
 
 	while (!glfwWindowShouldClose(m_window.get())) {
 		updateWindow();
 		processInput();
 		render();
 		
-		glUseProgram(program);
+		shader.use();
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 

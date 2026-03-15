@@ -21,16 +21,24 @@
     <ClCompile Include="App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="main_v.glsl" />
+    <None Include=".gitignore" />
+    <None Include="main_f.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
