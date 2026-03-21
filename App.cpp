@@ -16,9 +16,11 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle) {
 	if (m_window == nullptr) {
 		throw std::runtime_error{ "Failed to create GLFW window" };
 	}
+	m_input.setGlfwWindow(m_window.get());
 
 	glfwSetWindowUserPointer(m_window.get(), this);
 	glfwSetCursorPosCallback(m_window.get(), mouseCallback);
+	glfwSetInputMode(m_window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwMakeContextCurrent(m_window.get());
 	glewExperimental = true;
@@ -27,18 +29,65 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle) {
 	}
 	
 	glViewport(0, 0, windowWidth, windowHeight);
+	glEnable(GL_DEPTH_TEST);
 }
 
 float vertices[] = {
-	// positions          // colors           // texture coords
-	 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-	 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
-unsigned int indices[] = {  // note that we start from 0!
-	0, 1, 3,   // first triangle
-	1, 2, 3    // second triangle
+unsigned int indices[] = {
+	0, 1, 2,
+	3, 4, 5,
+	6, 7, 8,
+	9, 10, 11,
+	12, 13, 14,
+	15, 16, 17,
+	18, 19, 20,
+	21, 22, 23,
+	24, 25, 26,
+	27, 28, 29,
+	30, 31, 32,
+	33, 34, 35
 };
 
 void App::run() {
@@ -49,14 +98,14 @@ void App::run() {
 	IndexBuffer ebo{ indices, sizeof(indices) };
 
 	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(1);
 	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	vao.unbind();
 
@@ -64,7 +113,7 @@ void App::run() {
 
 	Shader shader{ "main_v.glsl", "main_f.glsl" };
 
-	while (!glfwWindowShouldClose(m_window.get())) {
+	while (m_running) {
 		updateWindow();
 		processInput();
 		render();
@@ -84,10 +133,14 @@ void App::run() {
 
 		texture.bind();
 		vao.bind();
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(m_window.get());
 	}
+}
+
+Input& App::getInput() noexcept {
+	return m_input;
 }
 
 void App::updateWindow() noexcept {
@@ -95,25 +148,32 @@ void App::updateWindow() noexcept {
 }
 
 void App::processInput() noexcept {
-	if (glfwGetKey(m_window.get(), GLFW_KEY_W) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_W))
 		m_camera.move(Camera::Direction::Front);
-	if (glfwGetKey(m_window.get(), GLFW_KEY_S) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_S))
 		m_camera.move(Camera::Direction::Back);
-	if (glfwGetKey(m_window.get(), GLFW_KEY_A) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_A))
 		m_camera.move(Camera::Direction::Left);
-	if (glfwGetKey(m_window.get(), GLFW_KEY_D) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_D))
 		m_camera.move(Camera::Direction::Right);
-	if (glfwGetKey(m_window.get(), GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_SPACE))
 		m_camera.move(Camera::Direction::Up);
-	if (glfwGetKey(m_window.get(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (m_input.getKey(GLFW_KEY_LEFT_SHIFT))
 		m_camera.move(Camera::Direction::Down);
 
 	m_camera.update();
+
+	if (m_input.getKey(GLFW_KEY_ESCAPE))
+		close();
 }
 
 void App::render() noexcept {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void App::close() noexcept {
+	m_running = false;
 }
 
 void App::mouseCallback(GLFWwindow* window, double xpos, double ypos) noexcept {

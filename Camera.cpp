@@ -12,9 +12,9 @@ Camera::Camera(const glm::vec3& position) :
 void Camera::move(Direction dir) noexcept {
 	switch (dir) {
 	case Direction::Front:
-		m_position += m_front * m_deltaTime * m_speed; break;
+		m_position += glm::normalize(glm::vec3{ m_front.x, 0.0f, m_front.z }) * m_deltaTime * m_speed; break;
 	case Direction::Back:
-		m_position -= m_front * m_deltaTime * m_speed; break;
+		m_position -= glm::normalize(glm::vec3{ m_front.x, 0.0f, m_front.z }) * m_deltaTime * m_speed; break;
 	case Direction::Left:
 		m_position -= glm::normalize(glm::cross(m_front, m_up)) * m_deltaTime * m_speed; break;
 	case Direction::Right:

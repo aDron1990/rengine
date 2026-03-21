@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="App.hpp" />
     <ClInclude Include="Buffer.hpp" />
     <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="Input.hpp" />
     <ClInclude Include="Shader.hpp" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Texture.hpp" />
