@@ -4,12 +4,13 @@
 #include "VertexArray.hpp"
 #include "Texture.hpp"
 
-#
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "tiny_obj_loader.h"
 
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 App::App(int windowWidth, int windowHeight, const std::string& windowTitle) {
 	m_window = GlfwWindowPtr(glfwCreateWindow(windowWidth, windowHeight, windowTitle.c_str(), nullptr, nullptr));
@@ -30,86 +31,52 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle) {
 	
 	glViewport(0, 0, windowWidth, windowHeight);
 	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
 }
 
-float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-unsigned int indices[] = {
-	0, 1, 2,
-	3, 4, 5,
-	6, 7, 8,
-	9, 10, 11,
-	12, 13, 14,
-	15, 16, 17,
-	18, 19, 20,
-	21, 22, 23,
-	24, 25, 26,
-	27, 28, 29,
-	30, 31, 32,
-	33, 34, 35
-};
-
 void App::run() {
-	VertexArray vao;
-	vao.bind();
+	std::vector<tinyobj::shape_t> shapes; 
+	std::vector<tinyobj::material_t> materials; 
+	tinyobj::attrib_t attrib; 
 
-	VertexBuffer vbo{ vertices, sizeof(vertices) };
-	IndexBuffer ebo{ indices, sizeof(indices) };
+	std::string warn; 
+	std::string err; 
 
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "viking_room.obj")) { 
+		throw std::runtime_error(err); 
+	} 
+	std::vector<float> vertices; 
+	std::vector<unsigned int> indices; 
+	vertices.reserve(attrib.vertices.size() + attrib.texcoords.size()); 
+	for (const auto& shape : shapes) { 
+		for (const auto& idx : shape.mesh.indices) { 
+			vertices.push_back(attrib.vertices[3 * idx.vertex_index + 0]); 
+			vertices.push_back(attrib.vertices[3 * idx.vertex_index + 1]); 
+			vertices.push_back(attrib.vertices[3 * idx.vertex_index + 2]); 
+			if (idx.texcoord_index >= 0) { 
+				vertices.push_back(attrib.texcoords[2 * idx.texcoord_index + 0]); 
+				vertices.push_back(attrib.texcoords[2 * idx.texcoord_index + 1]); 
+			} else { 
+				vertices.push_back(0.0f); 
+				vertices.push_back(0.0f); 
+			} 
+		} 
+	} 
+	VertexArray vao; 
+	vao.bind(); 
+	
+	VertexBuffer vbo{ vertices.data(), vertices.size() * sizeof(float)};
+	//IndexBuffer ebo{ indices.data(), indices.size()}; 
+	// position attribute 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0); 
+	glEnableVertexAttribArray(0); 
+	// texture coord attribute 
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); 
 	glEnableVertexAttribArray(1);
 
 	vao.unbind();
 
-	Texture texture{ "awesomeface.png" };
+	Texture texture{ "viking_room.png" };
 
 	Shader shader{ "main_v.glsl", "main_f.glsl" };
 
@@ -124,7 +91,10 @@ void App::run() {
 
 		static int frame = 0;
 		//frame++;
-		auto model = glm::rotate(glm::mat4{ 1.0f }, (float)frame / 100.0f, glm::vec3{ 0.0, 1.0f, 0.0f });
+		//auto model = glm::rotate(glm::mat4{ 1.0f }, (float)frame / 100.0f, glm::vec3{ 0.0, 1.0f, 0.0f });
+
+		auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-90.0f), glm::vec3{1.0, 0.0f, 0.0f});
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3{ 0.0, 0.0f, 1.0f });
 
 		shader.use();
 		shader.setUniform(model, "model");
@@ -133,7 +103,8 @@ void App::run() {
 
 		texture.bind();
 		vao.bind();
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 5);
+		//glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(m_window.get());
 	}
