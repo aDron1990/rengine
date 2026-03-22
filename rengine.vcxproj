@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -144,6 +145,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="cubemap_f.glsl" />
+    <None Include="cubemap_v.glsl" />
     <None Include="main_f.glsl" />
     <None Include="main_v.glsl" />
     <None Include="packages.config" />
@@ -152,6 +155,7 @@
     <ClInclude Include="App.hpp" />
     <ClInclude Include="Buffer.hpp" />
     <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="Cubemap.hpp" />
     <ClInclude Include="Input.hpp" />
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Object.hpp" />

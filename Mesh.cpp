@@ -33,6 +33,10 @@ void Mesh::loadObj(const std::string& objPath) {
 			vertex.position.y = attrib.vertices[3 * idx.vertex_index + 1];
 			vertex.position.z = attrib.vertices[3 * idx.vertex_index + 2];
 
+			vertex.normal.x = attrib.normals[3 * idx.normal_index + 0];
+			vertex.normal.y = attrib.normals[3 * idx.normal_index + 1];
+			vertex.normal.z = attrib.normals[3 * idx.normal_index + 2];
+
 			if (idx.texcoord_index >= 0) {
 				vertex.tex_coords.x = attrib.texcoords[2 * idx.texcoord_index + 0];
 				vertex.tex_coords.y = attrib.texcoords[2 * idx.texcoord_index + 1];
@@ -50,9 +54,12 @@ void Mesh::loadObj(const std::string& objPath) {
 	m_vbo = VertexBuffer{ m_vertices.data(), m_vertices.size() * sizeof(Vertex) };
 
 	// position attribute 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	// texture coord attribute 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	// normal attribute 
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	// texture coord attribute 
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 }

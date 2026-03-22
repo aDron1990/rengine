@@ -45,12 +45,17 @@
     <ClCompile Include="Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Cubemap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="main_v.glsl" />
     <None Include=".gitignore" />
     <None Include="main_f.glsl" />
+    <None Include="cubemap_v.glsl" />
+    <None Include="cubemap_f.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -87,6 +92,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cubemap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
