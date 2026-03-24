@@ -5,6 +5,7 @@
 
 #include "Camera.hpp"
 #include "Input.hpp"
+#include "systems/RendererSystem.hpp"
 #include "utils.hpp"
 
 class App {

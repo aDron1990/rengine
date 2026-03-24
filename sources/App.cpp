@@ -41,24 +41,10 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
 
 void App::run()
 {
-    auto cubemapTexture = loadCubemap({ "resources/images/skybox/right.jpg",
-        "resources/images/skybox/left.jpg",
-        "resources/images/skybox/top.jpg",
-        "resources/images/skybox/bottom.jpg",
-        "resources/images/skybox/front.jpg",
-        "resources/images/skybox/back.jpg" });
+    RendererSystem renderer { m_registry, m_camera };
 
     Shader shader { "resources/shaders/main_v.glsl",
         "resources/shaders/main_f.glsl" };
-    Shader cubeShader { "resources/shaders/cubemap_v.glsl",
-        "resources/shaders/cubemap_f.glsl" };
-
-    auto skyboxVAO = VertexArray { };
-    skyboxVAO.bind();
-    auto skyboxBuffer = VertexBuffer { skyboxVertices, sizeof(skyboxVertices) };
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-        (void*)0);
-    glEnableVertexAttribArray(0);
 
     auto roomMesh = std::make_shared<Mesh>("resources/models/viking_room.obj");
     auto planeMesh = std::make_shared<Mesh>("resources/models/plane.obj");
@@ -102,18 +88,7 @@ void App::run()
             0.1f, 100.0f);
         auto& view = m_camera.getView();
 
-        {
-            auto view_ = glm::mat4(glm::mat3(view));
-
-            glDepthMask(GL_FALSE);
-            cubeShader.use();
-            cubeShader.setUniform(view_, "view");
-            cubeShader.setUniform(proj, "proj");
-            skyboxVAO.bind();
-            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-            glDepthMask(GL_TRUE);
-        }
+        renderer.render(view, proj);
 
         shader.use();
         shader.setUniform(view, "view");

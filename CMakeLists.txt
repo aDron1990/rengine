@@ -40,6 +40,10 @@ add_executable(${PROJECT_NAME}
 
     sources/components/Transform.hpp
     sources/components/Transform.cpp
+    sources/components/Renderer.hpp
+
+    sources/systems/RendererSystem.hpp
+    sources/systems/RendererSystem.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)

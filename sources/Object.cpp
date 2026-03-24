@@ -6,8 +6,7 @@ Object::Object(entt::registry& registry, std::shared_ptr<Mesh> mesh, std::shared
     : m_registry { registry }
     , m_entity { m_registry.create() }
     , m_transform { m_registry.emplace<Transform>(m_entity) }
-    , m_mesh { mesh }
-    , m_texture { texture }
+    , m_renderer { m_registry.emplace<Renderer>(m_entity, Renderer { mesh, texture }) }
 {
 }
 
@@ -16,8 +15,8 @@ void Object::draw(Shader& shader) const noexcept
     auto model = m_transform.getMatrix();
 
     shader.setUniform(model, "model");
-    m_texture->bind();
-    m_mesh->draw();
+    m_renderer.texture->bind();
+    m_renderer.mesh->draw();
 }
 
 glm::vec3& Object::position() noexcept { return m_transform.position; }

@@ -3,6 +3,7 @@
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "components/Renderer.hpp"
 #include "components/Transform.hpp"
 #include "utils.hpp"
 
@@ -25,12 +26,7 @@ public:
 private:
     entt::registry& m_registry;
     entt::entity m_entity;
+
     Transform& m_transform;
-
-    std::shared_ptr<Mesh> m_mesh;
-    std::shared_ptr<Texture> m_texture;
-
-    glm::vec3 m_position { };
-    glm::vec3 m_rotation { };
-    glm::vec3 m_scale { 1.0f };
+    Renderer& m_renderer;
 };
