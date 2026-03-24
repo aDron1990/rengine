@@ -10,32 +10,34 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
-    main.cpp
-    utils.hpp
-    stb_image.h
-    tiny_obj_loader.h
-    tiny_obj_loader.cc
+    sources/main.cpp
+    sources/utils.hpp
+    sources/stb_image.h
+    sources/tiny_obj_loader.h
+    sources/tiny_obj_loader.cc
 
-    App.cpp
-    App.hpp
-    Input.hpp
-    Input.cpp
-    Buffer.hpp
-    Camera.hpp
-    Camera.cpp
-    Cubemap.hpp
-    Cubemap.cpp
-    Mesh.hpp
-    Mesh.cpp
-    Object.hpp
-    Object.cpp
-    Shader.hpp
-    Shader.cpp
-    Texture.hpp
-    Texture.cpp
-    VertexArray.hpp
-    VertexArray.cpp
+    sources/App.cpp
+    sources/App.hpp
+    sources/Input.hpp
+    sources/Input.cpp
+    sources/Buffer.hpp
+    sources/Camera.hpp
+    sources/Camera.cpp
+    sources/Cubemap.hpp
+    sources/Cubemap.cpp
+    sources/Mesh.hpp
+    sources/Mesh.cpp
+    sources/Object.hpp
+    sources/Object.cpp
+    sources/Shader.hpp
+    sources/Shader.cpp
+    sources/Texture.hpp
+    sources/Texture.cpp
+    sources/VertexArray.hpp
+    sources/VertexArray.cpp
 )
+
+target_include_directories(${PROJECT_NAME} PRIVATE sources)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     GLEW::GLEW

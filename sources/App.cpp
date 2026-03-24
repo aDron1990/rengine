@@ -39,16 +39,16 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle) : m_
 void App::run() {
 
 	auto cubemapTexture = loadCubemap({
-		"skybox/right.jpg",
-		"skybox/left.jpg",
-		"skybox/top.jpg",
-		"skybox/bottom.jpg",
-		"skybox/front.jpg",
-		"skybox/back.jpg"
+		"resources/images/skybox/right.jpg",
+		"resources/images/skybox/left.jpg",
+		"resources/images/skybox/top.jpg",
+		"resources/images/skybox/bottom.jpg",
+		"resources/images/skybox/front.jpg",
+		"resources/images/skybox/back.jpg"
 	});
 
-	Shader shader{ "main_v.glsl", "main_f.glsl" };
-	Shader cubeShader{ "cubemap_v.glsl", "cubemap_f.glsl" };
+	Shader shader{ "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" };
+	Shader cubeShader{ "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" };
 
 	auto skyboxVAO = VertexArray{};
 	skyboxVAO.bind();
@@ -56,15 +56,15 @@ void App::run() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	
-	auto roomMesh = std::make_shared<Mesh>("viking_room.obj");
-	auto planeMesh = std::make_shared<Mesh>("plane.obj");
-	auto obMesh = std::make_shared<Mesh>("ob.obj");
-	auto cubeMesh = std::make_shared<Mesh>("cube.obj");
+	auto roomMesh = std::make_shared<Mesh>("resources/models/viking_room.obj");
+	auto planeMesh = std::make_shared<Mesh>("resources/models/plane.obj");
+	auto obMesh = std::make_shared<Mesh>("resources/models/ob.obj");
+	auto cubeMesh = std::make_shared<Mesh>("resources/models/cube.obj");
 
-	auto roomTexture = std::make_shared<Texture>("viking_room.png");
-	auto floorTexture = std::make_shared<Texture>("floor.jpg");
-	auto grungeTexture = std::make_shared<Texture>("grunge.jpg");
-	auto rustTexture = std::make_shared<Texture>("rust.jpg");
+	auto roomTexture = std::make_shared<Texture>("resources/images/viking_room.png");
+	auto floorTexture = std::make_shared<Texture>("resources/images/floor.jpg");
+	auto grungeTexture = std::make_shared<Texture>("resources/images/grunge.jpg");
+	auto rustTexture = std::make_shared<Texture>("resources/images/rust.jpg");
 
 	Object room{ roomMesh, roomTexture };
 	Object floor{ planeMesh, floorTexture };
