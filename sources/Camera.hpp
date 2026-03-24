@@ -1,7 +1,5 @@
 #pragma once
 
-#include "utils.hpp"
-
 #include <glm/glm.hpp>
 
 #include <chrono>
@@ -21,6 +19,7 @@ public:
     void rotate(float yaw, float pitch) noexcept;
     void update() noexcept;
     const glm::mat4& getView() const noexcept;
+    const glm::vec3& getPos() const noexcept;
 
 private:
     glm::vec3 m_position;

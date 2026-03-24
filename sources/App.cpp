@@ -102,6 +102,7 @@ void App::run()
         auto& view = m_camera.getView();
 
         shader.setUniform(lightPos, "lightPos");
+        shader.setUniform(m_camera.getPos(), "viewPos");
 
         renderer.render(view, proj);
 
