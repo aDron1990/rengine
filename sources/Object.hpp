@@ -3,11 +3,14 @@
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "components/Transform.hpp"
 #include "utils.hpp"
+
+#include <entt/entt.hpp>
 
 class Object {
 public:
-    Object(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
+    Object(entt::registry& registry, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
 
     void draw(Shader& shader) const noexcept;
 
@@ -20,6 +23,10 @@ public:
     const glm::vec3& scale() const noexcept;
 
 private:
+    entt::registry& m_registry;
+    entt::entity m_entity;
+    Transform& m_transform;
+
     std::shared_ptr<Mesh> m_mesh;
     std::shared_ptr<Texture> m_texture;
 

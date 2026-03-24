@@ -70,10 +70,10 @@ void App::run()
     auto grungeTexture = std::make_shared<Texture>("resources/images/grunge.jpg");
     auto rustTexture = std::make_shared<Texture>("resources/images/rust.jpg");
 
-    Object room { roomMesh, roomTexture };
-    Object floor { planeMesh, floorTexture };
-    Object ob { obMesh, grungeTexture };
-    Object cube { cubeMesh, rustTexture };
+    Object room { m_registry, roomMesh, roomTexture };
+    Object floor { m_registry, planeMesh, floorTexture };
+    Object ob { m_registry, obMesh, grungeTexture };
+    Object cube { m_registry, cubeMesh, rustTexture };
 
     floor.scale() *= 2.5f;
     floor.position() += glm::vec3 { 0.0f, -0.1f, 0.0f };

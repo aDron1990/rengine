@@ -8,13 +8,11 @@ project(rengine)
 find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     sources/main.cpp
     sources/utils.hpp
-    sources/stb_image.h
-    sources/tiny_obj_loader.h
-    sources/tiny_obj_loader.cc
 
     sources/App.cpp
     sources/App.hpp
@@ -35,12 +33,20 @@ add_executable(${PROJECT_NAME}
     sources/Texture.cpp
     sources/VertexArray.hpp
     sources/VertexArray.cpp
+
+    sources/stb_image.h
+    sources/tiny_obj_loader.h
+    sources/tiny_obj_loader.cc
+
+    sources/components/Transform.hpp
+    sources/components/Transform.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PRIVATE
     GLEW::GLEW
     glfw
     glm::glm
+    EnTT::EnTT
 )

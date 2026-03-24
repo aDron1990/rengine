@@ -1,5 +1,6 @@
 #pragma once
 
+#include <entt/entt.hpp>
 #include <string>
 
 #include "Camera.hpp"
@@ -33,6 +34,7 @@ private:
     GlfwWindowPtr m_window;
     Input m_input;
     Camera m_camera { glm::vec3 { 0.0f, 0.0f, 3.0f } };
+    entt::registry m_registry;
 
     glm::ivec2 m_windowSize;
     bool m_running = true;
