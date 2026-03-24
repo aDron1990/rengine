@@ -1,6 +1,8 @@
 #include "RendererSystem.hpp"
 
 #include "Cubemap.hpp"
+#include "components/Renderer.hpp"
+#include "components/Transform.hpp"
 
 RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)
     : m_registry { registry }
@@ -38,4 +40,16 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture.get());
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
+
+    auto objects = m_registry.view<Transform, Renderer>();
+    m_shader.use();
+    m_shader.setUniform(view, "view");
+    m_shader.setUniform(proj, "proj");
+    for (auto [entity, transform, renderer] : objects.each()) {
+        auto model = transform.getMatrix();
+
+        m_shader.setUniform(model, "model");
+        renderer.texture->bind();
+        renderer.mesh->draw();
+    }
 }

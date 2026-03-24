@@ -5,7 +5,6 @@
 
 #include "Camera.hpp"
 #include "Input.hpp"
-#include "systems/RendererSystem.hpp"
 #include "utils.hpp"
 
 class App {
@@ -17,7 +16,6 @@ public:
 private:
     void updateWindow() noexcept;
     void processInput() noexcept;
-    void render() noexcept;
     void close() noexcept;
 
 private:

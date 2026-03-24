@@ -2,17 +2,13 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <stdexcept>
-#include <vector>
 
-#include "Buffer.hpp"
-#include "Cubemap.hpp"
 #include "Mesh.hpp"
 #include "Object.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
-#include "VertexArray.hpp"
+#include "systems/RendererSystem.hpp"
 #include "tiny_obj_loader.h"
 
 App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
@@ -75,7 +71,6 @@ void App::run()
     while (m_running) {
         updateWindow();
         processInput();
-        render();
 
         static float fov = 60.0f;
         if (m_input.getKey(GLFW_KEY_UP))
@@ -89,15 +84,6 @@ void App::run()
         auto& view = m_camera.getView();
 
         renderer.render(view, proj);
-
-        shader.use();
-        shader.setUniform(view, "view");
-        shader.setUniform(proj, "proj");
-
-        room.draw(shader);
-        floor.draw(shader);
-        ob.draw(shader);
-        cube.draw(shader);
 
         glfwSwapBuffers(m_window.get());
     }
@@ -126,12 +112,6 @@ void App::processInput() noexcept
 
     if (m_input.getKey(GLFW_KEY_ESCAPE))
         close();
-}
-
-void App::render() noexcept
-{
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void App::close() noexcept { m_running = false; }
