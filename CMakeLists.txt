@@ -9,6 +9,7 @@ find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     sources/main.cpp
@@ -53,4 +54,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
     glm::glm
     EnTT::EnTT
+    imgui::imgui
 )
