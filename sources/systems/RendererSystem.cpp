@@ -8,7 +8,6 @@
 #include <glm/gtx/norm.hpp>
 
 #include <glm/geometric.hpp>
-#include <map>
 #include <vector>
 
 RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)

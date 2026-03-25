@@ -5,7 +5,6 @@
 #include "Texture.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
-#include "utils.hpp"
 
 #include <entt/entt.hpp>
 
