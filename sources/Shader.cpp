@@ -68,3 +68,11 @@ void Shader::setUniform<glm::vec3>(const glm::vec3& value,
     auto ptr = glGetUniformLocation(m_program.get(), name.c_str());
     glUniform3fv(ptr, 1, glm::value_ptr(value));
 }
+
+template <>
+void Shader::setUniform<float>(const float& value,
+    const std::string& name) noexcept
+{
+    auto ptr = glGetUniformLocation(m_program.get(), name.c_str());
+    glUniform1f(ptr, value);
+}

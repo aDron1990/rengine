@@ -101,8 +101,17 @@ void App::run()
             0.1f, 100.0f);
         auto& view = m_camera.getView();
 
-        shader.setUniform(lightPos, "lightPos");
         shader.setUniform(m_camera.getPos(), "viewPos");
+
+        shader.setUniform(glm::vec3 { 1.0f, 0.5f, 0.31f }, "material.ambient");
+        shader.setUniform(glm::vec3 { 1.0f, 0.5f, 0.31f }, "material.diffuse");
+        shader.setUniform(glm::vec3 { 0.5f, 0.5f, 0.5f }, "material.specular");
+        shader.setUniform(32.0f, "material.shininess");
+
+        shader.setUniform(lightPos, "light.position");
+        shader.setUniform(glm::vec3 { 0.2f, 0.2f, 0.2f }, "light.ambient");
+        shader.setUniform(glm::vec3 { 0.5f, 0.5f, 0.5f }, "light.diffuse");
+        shader.setUniform(glm::vec3 { 1.0f, 1.0f, 1.0f }, "light.specular");
 
         renderer.render(view, proj);
 
