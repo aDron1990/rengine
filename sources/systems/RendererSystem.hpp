@@ -18,6 +18,7 @@ private:
     entt::registry& m_registry;
     Shader m_shader;
     Shader m_skyboxShader;
+    Shader m_transparentShader;
     Camera& m_camera;
     GlTexture m_skyboxTexture { };
     VertexArray m_skyboxVAO { };

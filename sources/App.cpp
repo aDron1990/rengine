@@ -10,6 +10,7 @@
 #include "Object.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "components/Renderer.hpp"
 #include "systems/RendererSystem.hpp"
 
 #include "imgui.h"
@@ -47,27 +48,42 @@ void App::run()
 
     auto& shader = renderer.getShader();
 
-    auto roomMesh = std::make_shared<Mesh>("resources/models/viking_room.obj");
     auto planeMesh = std::make_shared<Mesh>("resources/models/plane.obj");
-    auto obMesh = std::make_shared<Mesh>("resources/models/ob.obj");
     auto cubeMesh = std::make_shared<Mesh>("resources/models/cube.obj");
 
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
-    auto roomTexture = std::make_shared<Texture>("resources/images/viking_room.png");
     auto floorTexture = std::make_shared<Texture>("resources/images/floor.jpg");
-    auto grungeTexture = std::make_shared<Texture>("resources/images/grunge.jpg");
-    auto rustTexture = std::make_shared<Texture>("resources/images/rust.jpg");
     auto containerTexture = std::make_shared<Texture>("resources/images/container2.png");
     auto containerSpecularTexture = std::make_shared<Texture>("resources/images/container2_specular.png");
+    auto windowTexture = std::make_shared<Texture>("resources/images/window.png");
 
     Object floor { m_registry, planeMesh, floorTexture, whiteTexture };
-    Object ob { m_registry, cubeMesh, containerTexture, containerSpecularTexture };
+    Object cube { m_registry, cubeMesh, containerTexture, containerSpecularTexture };
+    Object window { m_registry, planeMesh, windowTexture, whiteTexture };
+    Object window1 { m_registry, planeMesh, windowTexture, whiteTexture };
+    Object window2 { m_registry, planeMesh, windowTexture, whiteTexture };
 
     floor.scale() *= 2.5f;
     floor.position() += glm::vec3 { 0.0f, -0.2f, 0.0f };
 
-    ob.position() = { 0.0f, 0.3f, 0.0f };
-    ob.rotation() = { 0.0f, -90.0f, 0.0f };
+    cube.position() = { 2.0f, 0.3f, 0.0f };
+    cube.rotation() = { 0.0f, -90.0f, 0.0f };
+
+    window.addComponent(Transparent { });
+    window1.addComponent(Transparent { });
+    window2.addComponent(Transparent { });
+
+    window.scale() *= 0.3;
+    window1.scale() *= 0.3;
+    window2.scale() *= 0.3;
+
+    window.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
+    window1.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
+    window2.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
+
+    window.position() = { 0.5f, 0.5f, 0.0f };
+    window1.position() = { 0.0f, 0.5f, 0.0f };
+    window2.position() = { -0.5f, 0.5f, 0.0f };
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,7 +122,7 @@ void App::run()
         static int frame = 0;
 
         frame++;
-        ob.rotation() = glm::vec3 { (float)frame, (float)frame * 1.5f, (float)frame * 1.7f } * 0.2f;
+        cube.rotation() = glm::vec3 { (float)frame, (float)frame * 1.5f, (float)frame * 1.7f } * 0.2f;
 
         shader.setUniform(lightPos, "light.position");
 
@@ -126,6 +142,8 @@ void App::run()
 Input& App::getInput() noexcept { return m_input; }
 
 void App::updateWindow() noexcept { glfwPollEvents(); }
+
+void App::close() noexcept { m_running = false; }
 
 void App::processInput() noexcept
 {
@@ -147,8 +165,6 @@ void App::processInput() noexcept
 
     m_camera.update();
 }
-
-void App::close() noexcept { m_running = false; }
 
 void App::mouseCallback(GLFWwindow* window, double xpos, double ypos) noexcept
 {

@@ -15,6 +15,12 @@ public:
 
     void draw(Shader& shader) const noexcept;
 
+    template <typename T>
+    void addComponent(const T& component) noexcept
+    {
+        m_registry.get_or_emplace<T>(m_entity, component);
+    }
+
     glm::vec3& position() noexcept;
     glm::vec3& rotation() noexcept;
     glm::vec3& scale() noexcept;

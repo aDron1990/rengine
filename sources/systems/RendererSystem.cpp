@@ -1,13 +1,21 @@
 #include "RendererSystem.hpp"
-
 #include "Cubemap.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
+
+#include <entt/entity/fwd.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
+
+#include <glm/geometric.hpp>
+#include <map>
+#include <vector>
 
 RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)
     : m_registry { registry }
     , m_shader { "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }
     , m_skyboxShader { "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }
+    , m_transparentShader { "resources/shaders/transparent_v.glsl", "resources/shaders/transparent_f.glsl" }
     , m_camera { camera }
 {
     // Skybox
@@ -41,16 +49,22 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
 
-    auto objects = m_registry.view<Transform, Renderer>();
     m_shader.use();
+    
     m_shader.setUniform(view, "view");
     m_shader.setUniform(proj, "proj");
 
+    glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
+    m_shader.setUniform(lightPos, "light.position");
     m_shader.setUniform(glm::vec3 { 0.2f, 0.2f, 0.2f }, "light.ambient");
     m_shader.setUniform(glm::vec3 { 0.5f, 0.5f, 0.5f }, "light.diffuse");
     m_shader.setUniform(glm::vec3 { 1.0f, 1.0f, 1.0f }, "light.specular");
     m_shader.setUniform(m_camera.getPos(), "viewPos");
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    auto objects = m_registry.view<Transform, Renderer>(entt::exclude<Transparent>);
     for (auto [entity, transform, renderer] : objects.each()) {
         auto model = transform.getMatrix();
 
@@ -65,6 +79,29 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
         renderer.texture->bind(0);
         renderer.specular->bind(1);
 
+        renderer.mesh->draw();
+    }
+
+    m_transparentShader.use();
+    m_transparentShader.setUniform(view, "view");
+    m_transparentShader.setUniform(proj, "proj");
+
+    auto tobjects = m_registry.view<Transform, Renderer, Transparent>();
+    std::vector<std::pair<float, entt::entity>> sorted;
+    for (auto entity : tobjects) {
+        auto& transform = tobjects.get<Transform>(entity);
+        auto dist = glm::distance2(transform.position, m_camera.getPos());
+        sorted.push_back({ dist, entity });
+    }
+    std::sort(sorted.begin(), sorted.end(), [](auto& a, auto& b) {
+        return a.first > b.first;
+    });
+
+    for (auto [_, entity] : sorted) {
+        auto [transform, renderer] = tobjects.get<Transform, Renderer>(entity);
+        auto model = transform.getMatrix();
+        m_transparentShader.setUniform(model, "model");
+        renderer.texture->bind();
         renderer.mesh->draw();
     }
 }
