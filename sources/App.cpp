@@ -8,7 +8,6 @@
 
 #include "Mesh.hpp"
 #include "Object.hpp"
-#include "Shader.hpp"
 #include "Texture.hpp"
 #include "components/Renderer.hpp"
 #include "systems/RendererSystem.hpp"
@@ -92,7 +91,10 @@ void App::run()
     ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    std::cout << m_registry.view<AABB>()->size() << std::endl;
+
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
+
     while (m_running) {
         updateWindow();
 

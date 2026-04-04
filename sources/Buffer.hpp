@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Input.hpp"
 #include "utils.hpp"
 
-template <GLenum type>
+template <GLenum type, GLenum usage = GL_STATIC_DRAW>
 class Buffer {
 public:
     Buffer() = default;
@@ -13,7 +14,7 @@ public:
         glGenBuffers(1, &buffer);
         m_buffer.reset(buffer);
         bind();
-        glBufferData(type, size, data, GL_STATIC_DRAW);
+        glBufferData(type, size, data, usage);
     }
 
     void bind() const noexcept { glBindBuffer(type, m_buffer.get()); }

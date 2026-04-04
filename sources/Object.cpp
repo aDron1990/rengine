@@ -7,6 +7,7 @@ Object::Object(entt::registry& registry, std::shared_ptr<Mesh> mesh, std::shared
     , m_entity { m_registry.create() }
     , m_transform { m_registry.emplace<Transform>(m_entity) }
     , m_renderer { m_registry.emplace<Renderer>(m_entity, Renderer { mesh, texture, specular }) }
+    , m_aabb { m_registry.emplace<AABB>(m_entity, mesh->getAABB()) }
 {
 }
 

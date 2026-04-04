@@ -12,3 +12,8 @@ glm::mat4 Transform::getMatrix() const noexcept
     model = glm::scale(model, scale);
     return model;
 }
+
+glm::vec3 Transform::transformPoint(const glm::vec3& point) const noexcept
+{
+    return getMatrix() * glm::vec4 { point, 1.0f };
+}

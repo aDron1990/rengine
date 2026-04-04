@@ -10,6 +10,11 @@ void Mesh::draw() const noexcept
     glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 }
 
+AABB Mesh::getAABB() const noexcept
+{
+    return m_aabb;
+}
+
 void Mesh::loadObj(const std::string& objPath)
 {
     std::vector<tinyobj::shape_t> shapes;
@@ -25,6 +30,7 @@ void Mesh::loadObj(const std::string& objPath)
     }
 
     m_vertices.reserve(attrib.vertices.size() + attrib.texcoords.size());
+
     for (const auto& shape : shapes) {
         for (const auto& idx : shape.mesh.indices) {
 
@@ -33,6 +39,13 @@ void Mesh::loadObj(const std::string& objPath)
             vertex.position.x = attrib.vertices[3 * idx.vertex_index + 0];
             vertex.position.y = attrib.vertices[3 * idx.vertex_index + 1];
             vertex.position.z = attrib.vertices[3 * idx.vertex_index + 2];
+
+            m_aabb.min.x = std::min(m_aabb.min.x, vertex.position.x);
+            m_aabb.max.x = std::max(m_aabb.max.x, vertex.position.x);
+            m_aabb.min.y = std::min(m_aabb.min.y, vertex.position.y);
+            m_aabb.max.y = std::max(m_aabb.max.y, vertex.position.y);
+            m_aabb.min.z = std::min(m_aabb.min.z, vertex.position.z);
+            m_aabb.max.z = std::max(m_aabb.max.z, vertex.position.z);
 
             vertex.normal.x = attrib.normals[3 * idx.normal_index + 0];
             vertex.normal.y = attrib.normals[3 * idx.normal_index + 1];
