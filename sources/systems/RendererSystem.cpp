@@ -118,7 +118,7 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     m_linesShader.setUniform(proj, "proj");
 
     LineBatch lines { };
-    for (auto [_, aabb, transform] : m_registry.view<AABB, Transform>().each()) {
+    for (auto [_, aabb, transform] : m_registry.view<AABB, Transform, Picked>().each()) {
         auto model = glm::mat4 { 1.0f };
         model = glm::translate(model, transform.position);
         model = glm::scale(model, transform.scale);

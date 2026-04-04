@@ -11,6 +11,8 @@ struct AABB {
     glm::vec3 max { -INFINITY };
 };
 
+struct Picked { };
+
 inline AABB toGlobalAABB(const AABB& aabb, const Transform& transform) noexcept
 {
     auto model = transform.getMatrix();
