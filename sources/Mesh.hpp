@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Buffer.hpp"
 #include "VertexArray.hpp"
 #include "utils.hpp"

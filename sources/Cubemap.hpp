@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "utils.hpp"
 
 #include "third-party/stb_image.h"
