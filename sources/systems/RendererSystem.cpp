@@ -1,9 +1,14 @@
 #include "RendererSystem.hpp"
+#include "AABB.hpp"
 #include "Cubemap.hpp"
+#include "LineBatch.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
+#include "utils.hpp"
 
+#include <array>
 #include <entt/entity/fwd.hpp>
+#include <glm/ext/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -15,6 +20,7 @@ RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)
     , m_shader { "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }
     , m_skyboxShader { "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }
     , m_transparentShader { "resources/shaders/transparent_v.glsl", "resources/shaders/transparent_f.glsl" }
+    , m_linesShader { "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }
     , m_camera { camera }
 {
     // Skybox
@@ -33,6 +39,7 @@ RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)
     glEnableVertexAttribArray(0);
 }
 
+std::array<Line, 12> toLines(const AABB& aabb) noexcept;
 void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexcept
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -49,7 +56,7 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     glDepthMask(GL_TRUE);
 
     m_shader.use();
-    
+
     m_shader.setUniform(view, "view");
     m_shader.setUniform(proj, "proj");
 
@@ -103,4 +110,56 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
         renderer.texture->bind();
         renderer.mesh->draw();
     }
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    m_linesShader.use();
+    m_linesShader.setUniform(view, "view");
+    m_linesShader.setUniform(proj, "proj");
+
+    LineBatch lines { };
+    for (auto [_, aabb, transform] : m_registry.view<AABB, Transform, Picked>().each()) {
+        auto model = glm::mat4 { 1.0f };
+        model = glm::translate(model, transform.position);
+        model = glm::scale(model, transform.scale);
+
+        auto alignedAABB = toGlobalAABB(aabb, transform);
+
+        auto alignedLinesArray = toLines(alignedAABB);
+        for (const auto& line : alignedLinesArray) {
+            lines.pushLine(line);
+        }
+    }
+
+    lines.draw();
+}
+
+std::array<Line, 12> toLines(const AABB& aabb) noexcept
+{
+    glm::vec3 corners[] = {
+        { aabb.min.x, aabb.min.y, aabb.min.z },
+        { aabb.max.x, aabb.min.y, aabb.min.z },
+        { aabb.min.x, aabb.max.y, aabb.min.z },
+        { aabb.max.x, aabb.max.y, aabb.min.z },
+        { aabb.min.x, aabb.min.y, aabb.max.z },
+        { aabb.max.x, aabb.min.y, aabb.max.z },
+        { aabb.min.x, aabb.max.y, aabb.max.z },
+        { aabb.max.x, aabb.max.y, aabb.max.z }
+    };
+
+    std::array<Line, 12> result;
+    result[0] = { corners[0], corners[1] };
+    result[1] = { corners[1], corners[3] };
+    result[2] = { corners[3], corners[2] };
+    result[3] = { corners[2], corners[0] };
+    result[4] = { corners[4], corners[5] };
+    result[5] = { corners[5], corners[7] };
+    result[6] = { corners[7], corners[6] };
+    result[7] = { corners[6], corners[4] };
+    result[8] = { corners[0], corners[4] };
+    result[9] = { corners[1], corners[5] };
+    result[10] = { corners[2], corners[6] };
+    result[11] = { corners[3], corners[7] };
+
+    return result;
 }

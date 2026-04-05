@@ -34,6 +34,9 @@ add_executable(${PROJECT_NAME}
     sources/Texture.cpp
     sources/VertexArray.hpp
     sources/VertexArray.cpp
+    sources/LineBatch.hpp
+    sources/LineBatch.cpp
+    sources/AABB.hpp
 
     sources/components/Transform.hpp
     sources/components/Transform.cpp
