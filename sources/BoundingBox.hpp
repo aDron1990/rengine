@@ -6,14 +6,14 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
-struct AABB {
+struct BoundingBox {
     glm::vec3 min { +INFINITY };
     glm::vec3 max { -INFINITY };
 };
 
 struct Picked { };
 
-inline AABB toGlobalAABB(const AABB& aabb, const Transform& transform) noexcept
+inline BoundingBox toGlobalAABB(const BoundingBox& aabb, const Transform& transform) noexcept
 {
     auto model = transform.getMatrix();
 
@@ -37,5 +37,5 @@ inline AABB toGlobalAABB(const AABB& aabb, const Transform& transform) noexcept
         worldMax = glm::max(worldMax, transformed);
     }
 
-    return AABB { worldMin, worldMax };
+    return BoundingBox { worldMin, worldMax };
 }

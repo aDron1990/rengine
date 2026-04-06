@@ -10,7 +10,7 @@ void Mesh::draw() const noexcept
     glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
 }
 
-AABB Mesh::getAABB() const noexcept
+BoundingBox Mesh::getAABB() const noexcept
 {
     return m_aabb;
 }

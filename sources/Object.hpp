@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AABB.hpp"
+#include "BoundingBox.hpp"
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
@@ -36,5 +36,5 @@ private:
 
     Transform& m_transform;
     Renderer& m_renderer;
-    AABB& m_aabb;
+    BoundingBox& m_aabb;
 };

@@ -9,7 +9,7 @@
 #include <optional>
 #include <stdexcept>
 
-#include "AABB.hpp"
+#include "BoundingBox.hpp"
 #include "Input.hpp"
 #include "Mesh.hpp"
 #include "Object.hpp"
@@ -96,7 +96,7 @@ void App::run()
     ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    std::cout << m_registry.view<AABB>()->size() << std::endl;
+    std::cout << m_registry.view<BoundingBox>()->size() << std::endl;
 
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
 
@@ -211,7 +211,7 @@ void App::processInput() noexcept
         glm::vec3 direction; // нормализованное направление
     };
 
-    auto rayIntersectsAABB = [](const Ray& ray, const AABB& aabb, float& tNear, float& tFar) {
+    auto rayIntersectsAABB = [](const Ray& ray, const BoundingBox& aabb, float& tNear, float& tFar) {
         tNear = -INFINITY;
         tFar = +INFINITY;
 
@@ -258,7 +258,7 @@ void App::processInput() noexcept
 
     Ray ray { m_camera.getPos(), worldDir };
 
-    auto view = m_registry.view<AABB, Transform>();
+    auto view = m_registry.view<BoundingBox, Transform>();
     auto closest = +INFINITY;
     std::optional<entt::entity> picked;
     for (auto [entity, localAABB, transform] : view.each()) {

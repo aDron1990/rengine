@@ -1,5 +1,5 @@
 #include "RendererSystem.hpp"
-#include "AABB.hpp"
+#include "BoundingBox.hpp"
 #include "Cubemap.hpp"
 #include "LineBatch.hpp"
 #include "components/Renderer.hpp"
@@ -39,7 +39,7 @@ RendererSystem::RendererSystem(entt::registry& registry, Camera& camera)
     glEnableVertexAttribArray(0);
 }
 
-std::array<Line, 12> toLines(const AABB& aabb) noexcept;
+std::array<Line, 12> toLines(const BoundingBox& aabb) noexcept;
 void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexcept
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -118,7 +118,7 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     m_linesShader.setUniform(proj, "proj");
 
     LineBatch lines { };
-    for (auto [_, aabb, transform] : m_registry.view<AABB, Transform, Picked>().each()) {
+    for (auto [_, aabb, transform] : m_registry.view<BoundingBox, Transform, Picked>().each()) {
         auto model = glm::mat4 { 1.0f };
         model = glm::translate(model, transform.position);
         model = glm::scale(model, transform.scale);
@@ -134,7 +134,7 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     lines.draw();
 }
 
-std::array<Line, 12> toLines(const AABB& aabb) noexcept
+std::array<Line, 12> toLines(const BoundingBox& aabb) noexcept
 {
     glm::vec3 corners[] = {
         { aabb.min.x, aabb.min.y, aabb.min.z },

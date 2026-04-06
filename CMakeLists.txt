@@ -36,7 +36,7 @@ add_executable(${PROJECT_NAME}
     sources/VertexArray.cpp
     sources/LineBatch.hpp
     sources/LineBatch.cpp
-    sources/AABB.hpp
+    sources/BoundingBox.hpp
 
     sources/components/Transform.hpp
     sources/components/Transform.cpp
