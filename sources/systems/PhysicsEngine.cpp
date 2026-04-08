@@ -1,4 +1,5 @@
 #include "PhysicsEngine.hpp"
+#include "BoundingBox.hpp"
 #include "components/Body.hpp"
 #include "components/Transform.hpp"
 
@@ -13,6 +14,8 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
+#include <glm/ext/vector_float4.hpp>
+#include <glm/trigonometric.hpp>
 
 PhysicsEngine::PhysicsEngine(entt::registry& registry, JPH::TempAllocatorImpl& tempAllocator, JPH::JobSystemThreadPool& jobSystem)
     : m_registry { registry }
@@ -40,38 +43,40 @@ void PhysicsEngine::update() noexcept
         JPH::Quat rotation;
         auto& ibody = m_world.GetBodyInterface();
         ibody.GetPositionAndRotation(body.bodyID, position, rotation);
+        auto rot = rotation.GetEulerAngles();
         transform.position = { position.GetX(), position.GetY(), position.GetZ() };
+        transform.rotation = { glm::degrees(rot.GetX()), glm::degrees(rot.GetY()), glm::degrees(rot.GetZ()) };
     }
 }
 
-Body PhysicsEngine::createCube() noexcept
+void PhysicsEngine::createCollider(entt::entity entity, bool dynamic)
 {
-    JPH::BoxShapeSettings box_shape(JPH::Vec3(0.25f, 0.25f, 0.25f));
+    if (!m_registry.all_of<BoundingBox, Transform>(entity))
+        return;
+
+    auto [bb_, transform] = m_registry.get<BoundingBox, Transform>(entity);
+    auto bb = bb_;
+    auto model = glm::mat4 { 1.0f };
+    model = glm::scale(model, transform.scale);
+    bb.min = model * glm::vec4 { bb.min, 1.0f };
+    bb.max = model * glm::vec4 { bb.max, 1.0f };
+
+    auto size = JPH::Vec3 { (bb.max.x - bb.min.x) / 2.0f, (bb.max.y - bb.min.y) / 2.0f, (bb.max.z - bb.min.z) / 2.0f };
+    auto position = JPH::Vec3 { transform.position.x, transform.position.y, transform.position.z };
+    glm::quat quat = transform.getQuat();
+    auto rotation = JPH::Quat { quat.x, quat.y, quat.z, quat.w };
+
+    JPH::BoxShapeSettings box_shape(size);
     JPH::BodyCreationSettings box_settings(
         box_shape.Create().Get(),
-        JPH::Vec3(0, 4, 0),
-        JPH::Quat::sIdentity(),
-        JPH::EMotionType::Dynamic,
-        1);
+        position,
+        rotation,
+        dynamic ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
+        dynamic ? Layers::MOVING : Layers::NON_MOVING);
 
     JPH::Body* box = m_world.GetBodyInterface().CreateBody(box_settings);
-    m_world.GetBodyInterface().AddBody(box->GetID(), JPH::EActivation::Activate);
-    return { box->GetID() };
-}
-
-Body PhysicsEngine::createPlane() noexcept
-{
-    JPH::BoxShapeSettings floor_shape(JPH::Vec3(2.5f, 0.25f, 2.5f));
-    JPH::BodyCreationSettings floor_settings(
-        floor_shape.Create().Get(),
-        JPH::Vec3(0, -0.25, 0),
-        JPH::Quat::sIdentity(),
-        JPH::EMotionType::Static,
-        0);
-
-    JPH::Body* floor = m_world.GetBodyInterface().CreateBody(floor_settings);
-    m_world.GetBodyInterface().AddBody(floor->GetID(), JPH::EActivation::DontActivate);
-    return { floor->GetID() };
+    m_world.GetBodyInterface().AddBody(box->GetID(), dynamic ? JPH::EActivation::Activate : JPH::EActivation::DontActivate);
+    m_registry.emplace_or_replace<Body>(entity, Body { box->GetID() });
 }
 
 void PhysicsEngine::destroyBody(entt::registry& registry, entt::entity entity)
@@ -80,4 +85,17 @@ void PhysicsEngine::destroyBody(entt::registry& registry, entt::entity entity)
     auto& body = m_registry.get<Body>(entity);
     ibody.RemoveBody(body.bodyID);
     ibody.DestroyBody(body.bodyID);
+}
+
+void PhysicsEngine::applyTransform(entt::entity entity) noexcept
+{
+    if (!m_registry.all_of<Body, Transform>(entity))
+        return;
+
+    auto [body, transform] = m_registry.get<Body, Transform>(entity);
+    JPH::RVec3 position = { transform.position.x, transform.position.y, transform.position.z };
+    JPH::RVec3 rotation = { glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z) };
+    auto quat = JPH::Quat::sEulerAngles(rotation);
+    auto& ibody = m_world.GetBodyInterface();
+    ibody.SetPositionAndRotation(body.bodyID, position, quat, JPH::EActivation::Activate);
 }

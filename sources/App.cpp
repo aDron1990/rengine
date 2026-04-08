@@ -78,6 +78,7 @@ void App::run()
 
     auto planeMesh = std::make_shared<Mesh>("resources/models/plane.obj");
     auto obMesh = std::make_shared<Mesh>("resources/models/ob.obj");
+    auto cubeMesh = std::make_shared<Mesh>("resources/models/cube.obj");
 
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
     auto floorTexture = std::make_shared<Texture>("resources/images/floor.jpg");
@@ -85,35 +86,17 @@ void App::run()
     auto containerSpecularTexture = std::make_shared<Texture>("resources/images/container2_specular.png");
     auto windowTexture = std::make_shared<Texture>("resources/images/window.png");
 
-    Object floor { m_registry, planeMesh, floorTexture, whiteTexture };
+    Object floor { m_registry, cubeMesh, floorTexture, whiteTexture };
+    Object cube { m_registry, cubeMesh, containerTexture, whiteTexture };
     Object ob { m_registry, obMesh, containerTexture, whiteTexture };
-    Object window { m_registry, planeMesh, windowTexture, whiteTexture };
-    Object window1 { m_registry, planeMesh, windowTexture, whiteTexture };
-    Object window2 { m_registry, planeMesh, windowTexture, whiteTexture };
+    
+    floor.scale() = { 20.0f, .2f, 20.0f };
+    cube.position() = { .0f, 5.f, 0.0f };
+    ob.position() = { 0.0f, 2.5f, 0.0f };
 
-    floor.addComponent(m_physics.createPlane());
-    floor.scale() *= 2.5f;
-    floor.position() += glm::vec3 { 0.0f, -0.2f, 0.0f };
-
-    ob.addComponent(m_physics.createCube());
-    ob.position() = { 2.0f, 0.3f, 0.0f };
-    ob.rotation() = { 0.0f, -90.0f, 0.0f };
-
-    window.addComponent(Transparent { });
-    window1.addComponent(Transparent { });
-    window2.addComponent(Transparent { });
-
-    window.scale() *= 0.3;
-    window1.scale() *= 0.3;
-    window2.scale() *= 0.3;
-
-    window.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
-    window1.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
-    window2.rotation() = glm::vec3 { 0.0f, 0.0f, 90.0f };
-
-    window.position() = { 0.5f, 0.5f, 0.0f };
-    window1.position() = { 0.0f, 0.5f, 0.0f };
-    window2.position() = { -0.5f, 0.5f, 0.0f };
+    m_physics.createCollider(floor.getEntity(), false);
+    m_physics.createCollider(cube.getEntity());
+    m_physics.createCollider(ob.getEntity());
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -121,8 +104,6 @@ void App::run()
     (void)io;
     ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
-    std::cout << m_registry.view<BoundingBox>()->size() << std::endl;
 
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
 
@@ -153,10 +134,12 @@ void App::run()
             ImGui::DragFloat3("rotation", glm::value_ptr(transform.rotation), 0.5f);
             ImGui::DragFloat3("scale", glm::value_ptr(transform.scale), 0.025f);
 
-            ImGui::SeparatorText("Transform");
+            ImGui::SeparatorText("Renderer");
             ImGui::Checkbox("Draw AABB", &renderer.drawAABB);
 
             ImGui::End();
+
+            m_physics.applyTransform(entity);
         }
 
         auto proj = glm::perspective(glm::radians(60.0f),

@@ -22,6 +22,8 @@ public:
         m_registry.get_or_emplace<T>(m_entity, component);
     }
 
+    entt::entity getEntity() const noexcept { return m_entity; }
+
     glm::vec3& position() noexcept;
     glm::vec3& rotation() noexcept;
     glm::vec3& scale() noexcept;

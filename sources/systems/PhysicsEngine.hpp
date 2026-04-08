@@ -1,7 +1,5 @@
 #pragma once
 
-#include "components/Body.hpp"
-
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/Factory.h>
@@ -69,8 +67,9 @@ class PhysicsEngine {
 public:
     PhysicsEngine(entt::registry& registry, JPH::TempAllocatorImpl& tempAllocator, JPH::JobSystemThreadPool& jobSystem);
     void update() noexcept;
-    Body createCube() noexcept;
-    Body createPlane() noexcept;
+
+    void applyTransform(entt::entity entity) noexcept;
+    void createCollider(entt::entity entity, bool dynamic = true);
 
 private:
     void destroyBody(entt::registry& registry, entt::entity entity);

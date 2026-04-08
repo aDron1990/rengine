@@ -10,4 +10,5 @@ struct Transform {
 
     glm::mat4 getMatrix() const noexcept;
     glm::vec3 transformPoint(const glm::vec3& point) const noexcept;
+    glm::quat getQuat() const noexcept;
 };
