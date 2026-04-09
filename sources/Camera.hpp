@@ -20,6 +20,7 @@ public:
     void update() noexcept;
     const glm::mat4& getView() const noexcept;
     const glm::vec3& getPos() const noexcept;
+    glm::vec3& Camera::getPos() noexcept;
 
 private:
     glm::vec3 m_position;

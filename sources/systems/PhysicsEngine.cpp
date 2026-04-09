@@ -24,8 +24,8 @@ PhysicsEngine::PhysicsEngine(entt::registry& registry, JPH::TempAllocatorImpl& t
 {
     m_world.Init(1024,
         0,
-        1024,
-        1024,
+        4096,
+        4096,
         m_broad_phase_layer_interface,
         m_object_vs_bp_filter,
         m_object_layer_pair_filter);

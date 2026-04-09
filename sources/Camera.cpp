@@ -61,3 +61,4 @@ void Camera::update() noexcept
 
 const glm::mat4& Camera::getView() const noexcept { return m_view; }
 const glm::vec3& Camera::getPos() const noexcept { return m_position; }
+glm::vec3& Camera::getPos() noexcept { return m_position; }

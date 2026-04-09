@@ -12,6 +12,8 @@
 #include <entt/entity/fwd.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <imgui.h>
+#include <numeric>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -47,6 +49,19 @@ std::array<Line, 12> toLinesAligned(const BoundingBox& aabb, const Transform& tr
 
 void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexcept
 {
+    auto now = std::chrono::steady_clock::now();
+    auto frametime = std::chrono::duration<float>(now - m_lastFrame).count();
+    m_lastFrame = now;
+
+    m_lastFrametimes[m_currentFrame] = frametime;
+    m_currentFrame = (m_currentFrame + 1) % FRAMES;
+
+    if (m_currentFrame == 0) {
+        float sum = std::accumulate(m_lastFrametimes.begin(), m_lastFrametimes.end(), 0.0f);
+        float average = sum / FRAMES;
+        FPS = 1.0f / average;
+    }
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -130,6 +145,7 @@ void RendererSystem::render(const glm::mat4& view, const glm::mat4& proj) noexce
     }
 
     ImGui::Begin("Render");
+    ImGui::Text("FPS: %f", FPS);
     ImGui::Text("%d objects drawed", drawed);
     ImGui::End();
 

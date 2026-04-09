@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <cstdlib>
 #include <entt/entity/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,6 +21,7 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
+#include <vector>
 
 #include "BoundingBox.hpp"
 #include "Input.hpp"
@@ -34,6 +36,11 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+float random(float min, float max)
+{
+    return min + (float)rand() / RAND_MAX * (max - min);
+}
 
 App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
     : m_registry { }
@@ -64,7 +71,7 @@ void App::run()
     JPH::RegisterDefaultAllocator();
     JPH::Factory::sInstance = new JPH::Factory { };
     JPH::RegisterTypes();
-    JPH::TempAllocatorImpl tempAllocator { 10 * 1024 * 1024 };
+    JPH::TempAllocatorImpl tempAllocator { 10 * 4096 * 4096 };
     JPH::JobSystemThreadPool jobSystem {
         JPH::cMaxPhysicsJobs,
         JPH::cMaxPhysicsBarriers,
@@ -86,17 +93,47 @@ void App::run()
     auto containerSpecularTexture = std::make_shared<Texture>("resources/images/container2_specular.png");
     auto windowTexture = std::make_shared<Texture>("resources/images/window.png");
 
+    Object floor0 { m_registry, cubeMesh, floorTexture, whiteTexture };
+    Object floor1 { m_registry, cubeMesh, floorTexture, whiteTexture };
+    Object floor2 { m_registry, cubeMesh, floorTexture, whiteTexture };
+    Object floor3 { m_registry, cubeMesh, floorTexture, whiteTexture };
     Object floor { m_registry, cubeMesh, floorTexture, whiteTexture };
-    Object cube { m_registry, cubeMesh, containerTexture, whiteTexture };
-    Object ob { m_registry, obMesh, containerTexture, whiteTexture };
-    
-    floor.scale() = { 20.0f, .2f, 20.0f };
-    cube.position() = { .0f, 5.f, 0.0f };
-    ob.position() = { 0.0f, 2.5f, 0.0f };
+
+    floor0.position() = { 0.0f, 0.0f, -5.0f };
+    floor1.position() = { 0.0f, 0.0f, 5.0f };
+    floor2.position() = { 5.0f, 0.0f, 0.0f };
+    floor3.position() = { -5.0f, 0.0f, 0.0f };
+
+    floor0.scale() = { 20.0f, .2f, 20.0f };
+    floor1.scale() = { 20.0f, .2f, 20.0f };
+    floor2.scale() = { 20.0f, .2f, 20.0f };
+    floor3.scale() = { 20.0f, .2f, 20.0f };
+
+    floor0.rotation() = { 45.0f, 0.f, 0.f };
+    floor1.rotation() = { -45.0f, 0.f, 0.f };
+    floor2.rotation() = { 0.f, 0.f, 45.f };
+    floor3.rotation() = { 0.f, 0.f, -45.f };
+
+    floor.position() = { 0.0f, -4.0f, 0.0f };
+
+    floor.scale() = { 5.0f, .2f, 5.0f };
 
     m_physics.createCollider(floor.getEntity(), false);
-    m_physics.createCollider(cube.getEntity());
-    m_physics.createCollider(ob.getEntity());
+    m_physics.createCollider(floor0.getEntity(), false);
+    m_physics.createCollider(floor1.getEntity(), false);
+    m_physics.createCollider(floor2.getEntity(), false);
+    m_physics.createCollider(floor3.getEntity(), false);
+
+    m_camera.getPos() = { 10.0f, 10.0f, 10.0f };
+
+    constexpr auto COUNT = 600;
+    std::vector<Object> cubes;
+    cubes.reserve(COUNT);
+    for (int i = 0; i < COUNT; i++) {
+        auto& cube = cubes.emplace_back(m_registry, cubeMesh, containerTexture, containerSpecularTexture);
+        cube.position() = { random(-5.0, 5.0), random(25.0, 200.0), random(-5.0, 5.0) };
+        m_physics.createCollider(cube.getEntity());
+    }
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,7 +143,6 @@ void App::run()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
-
     while (m_running) {
         updateWindow();
         m_physics.update();
