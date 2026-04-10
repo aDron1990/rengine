@@ -25,6 +25,7 @@
 #include "BoundingBox.hpp"
 #include "Input.hpp"
 #include "Mesh.hpp"
+#include "RenderTexture.hpp"
 #include "Texture.hpp"
 #include "components/Body.hpp"
 #include "components/Camera.hpp"
@@ -37,6 +38,7 @@
 #include "systems/RendererSystem.hpp"
 
 #include <cstdlib>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -67,7 +69,6 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
         throw std::runtime_error { "Failed to init GLEW" };
     }
 
-    glViewport(0, 0, m_windowSize.x, m_windowSize.y);
     glEnable(GL_DEPTH_TEST);
 
     auto& input = m_registry.ctx().emplace<Input>();
@@ -95,7 +96,9 @@ void App::run()
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
 
     FlyingCamera _cam = { m_registry, glm::vec3 { 10.0f, 10.0f, 10.0f } };
-    auto& camera = m_registry.ctx().emplace<std::reference_wrapper<FlyingCamera>>(_cam).get();
+    auto& flyCamera = m_registry.ctx().emplace<std::reference_wrapper<FlyingCamera>>(_cam).get();
+
+    auto renderTex = m_registry.ctx().emplace<std::shared_ptr<RenderTexture>>(std::make_shared<RenderTexture>(glm::ivec2 { 500, 300 }));
 
     RendererSystem renderer { m_registry };
 
@@ -163,7 +166,7 @@ void App::run()
         updateWindow();
         m_registry.ctx().get<Clock>().update();
         physics.update();
-        camera.update();
+        flyCamera.update();
 
         auto cameraEntity = m_registry.view<Camera, Transform>().front();
         auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
@@ -188,7 +191,8 @@ void App::run()
         ImGui::DragFloat3("position", glm::value_ptr(cameraTransform.position), 0.025f);
         ImGui::DragFloat3("front", glm::value_ptr(camera.front), 0.025f);
         ImGui::DragFloat2("near/far", n_f, 0.025f);
-        ImGui::DragFloat("fov", &fov, 0.1f);
+        ImGui::DragFloat("fov", &camera.fov, 0.1f);
+        ImGui::Image(renderTex->getId(), { 500, 300 }, { 0, 1 }, { 1, 0 });
         ImGui::End();
 
         auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
@@ -226,6 +230,19 @@ void App::run()
             physics.applyTransform(entity);
         }
 
+#if 1
+        {
+            auto size = renderTex->getSize();
+            auto aspect = renderTex->getAspect();
+            auto proj = camera.getProj(aspect);
+            renderTex->bindFBO();
+            glViewport(0, 0, size.x, size.y);
+            renderer.render(proj);
+            renderTex->unbindFBO();
+        }
+#endif
+
+        glViewport(0, 0, m_windowSize.x, m_windowSize.y);
         renderer.render(proj);
 
         ImGui::Render();
@@ -272,7 +289,7 @@ void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) 
     glm::vec2 mouseNDC = {
         (2.0f * mouseX / windowWidth) - 1.0f, 1.0f - (2.0f * mouseY / windowHeight)
     };
-    auto& camera = m_registry.ctx().get<FlyingCamera>().getComponent<Camera>();
+    auto& camera = m_registry.ctx().get<std::reference_wrapper<FlyingCamera>>().get().getComponent<Camera>();
     auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
 
     glm::vec4 clip = { mouseNDC.x, mouseNDC.y, -1.0f, 1.0f };

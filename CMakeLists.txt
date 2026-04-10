@@ -23,6 +23,10 @@ add_executable(${PROJECT_NAME}
     sources/Buffer.hpp
 
     sources/Cubemap.hpp
+    sources/RenderTarget.hpp
+    sources/RenderTexture.hpp
+    sources/RenderTexture.cpp
+
     sources/Mesh.hpp
     sources/Mesh.cpp
     sources/Object.hpp
@@ -42,7 +46,6 @@ add_executable(${PROJECT_NAME}
     sources/objects/Model.hpp
     sources/objects/Model.cpp
 
-
     sources/components/Transform.hpp
     sources/components/Transform.cpp
     sources/components/Camera.hpp
@@ -57,7 +60,6 @@ add_executable(${PROJECT_NAME}
     sources/systems/PhysicsEngine.cpp
     sources/systems/Clock.hpp
     sources/systems/Clock.cpp
-
 
     sources/third-party/stb_image.h
     sources/third-party/tiny_obj_loader.h

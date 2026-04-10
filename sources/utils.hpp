@@ -120,6 +120,16 @@ struct GlTextureDeleter {
 };
 using GlTexture = GlHandle<GLuint, GlTextureDeleter>;
 
+struct GlFramebufferDeleter {
+    void operator()(GLuint id) const noexcept { glDeleteFramebuffers(1, &id); }
+};
+using GlFramebuffer = GlHandle<GLuint, GlFramebufferDeleter>;
+
+struct GlRenderbufferDeleter {
+    void operator()(GLuint id) const noexcept { glDeleteRenderbuffers(1, &id); }
+};
+using GlRenderbuffer = GlHandle<GLuint, GlRenderbufferDeleter>;
+
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
