@@ -30,12 +30,13 @@ RendererSystem::RendererSystem(entt::registry& registry)
 {
     // Skybox
     m_skyboxTexture.reset(
-        loadCubemap({ "resources/images/skybox/right.jpg",
-            "resources/images/skybox/left.jpg",
-            "resources/images/skybox/top.jpg",
-            "resources/images/skybox/bottom.jpg",
-            "resources/images/skybox/front.jpg",
-            "resources/images/skybox/back.jpg" }));
+        loadCubemap({ 
+            "resources/images/space_skybox/right.png",
+            "resources/images/space_skybox/left.png",
+            "resources/images/space_skybox/top.png",
+            "resources/images/space_skybox/bottom.png",
+            "resources/images/space_skybox/front.png",
+            "resources/images/space_skybox/back.png" }));
 
     m_skyboxVAO.bind();
     m_skyboxVBO = VertexBuffer { skyboxVertices, sizeof(skyboxVertices) };

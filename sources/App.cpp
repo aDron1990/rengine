@@ -154,7 +154,7 @@ void App::run()
         ImGui::DragFloat3("front", glm::value_ptr(camera.front), 0.025f);
         ImGui::DragFloat2("near/far", &camera.near, 0.025f);
         ImGui::DragFloat("fov", &camera.fov, 0.1f);
-        ImGui::Image(renderTex->getId(), { 500, 300 }, { 0, 1 }, { 1, 0 });
+        ImGui::Image(renderTex->getId(), { 300, 180 }, { 0, 1 }, { 1, 0 });
         ImGui::End();
 
         auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
