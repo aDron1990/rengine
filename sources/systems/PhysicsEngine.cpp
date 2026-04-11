@@ -22,6 +22,7 @@
 
 #include <glm/ext/vector_float3.hpp>
 #include <glm/ext/vector_float4.hpp>
+#include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 
 #include <optional>
@@ -39,13 +40,13 @@ PhysicsEngine::PhysicsEngine(entt::registry& registry, JPH::TempAllocatorImpl& t
         m_object_vs_bp_filter,
         m_object_layer_pair_filter);
 
+    m_world.SetGravity({ 0, 0, 0 });
     m_registry.storage<Body>();
     m_registry.on_destroy<Body>().connect<&PhysicsEngine::destroyBody>(this);
 }
 
 void PhysicsEngine::update() noexcept
 {
-    const float fixedDelta = 1.0f / 180.0f;
     m_world.Update(m_registry.ctx().get<Clock>().getDelta(), 1, &m_tempAllocator, &m_jobSystem);
     auto view = m_registry.view<Body, Transform>();
     for (auto [entity, body, transform] : view.each()) {
@@ -145,6 +146,17 @@ void PhysicsEngine::addImpulse(entt::entity entity, glm::vec3 impulse) noexcept
     JPH::RVec3 impulse_ = { impulse.x, impulse.y, impulse.z };
     auto& ibody = m_world.GetBodyInterface();
     ibody.AddImpulse(bodyID, impulse_);
+}
+
+void PhysicsEngine::addForce(entt::entity entity, glm::vec3 force) noexcept
+{
+    if (!m_registry.all_of<Body>(entity))
+        return;
+
+    auto [bodyID] = m_registry.get<Body>(entity);
+    JPH::RVec3 force_ = { force.x, force.y, force.z };
+    auto& ibody = m_world.GetBodyInterface();
+    ibody.AddForce(bodyID, force_);
 }
 
 glm::vec3 PhysicsEngine::getVelocity(entt::entity entity) const noexcept

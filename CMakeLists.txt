@@ -57,11 +57,15 @@ add_executable(${PROJECT_NAME}
     sources/components/Renderer.hpp
     sources/components/Material.hpp
     sources/components/Body.hpp
+    sources/components/Celestial.hpp
+    sources/components/OrbitalBody.hpp
 
     sources/systems/RendererSystem.hpp
     sources/systems/RendererSystem.cpp
     sources/systems/PhysicsEngine.hpp
     sources/systems/PhysicsEngine.cpp
+    sources/systems/OrbitalEngine.hpp
+    sources/systems/OrbitalEngine.cpp
     sources/systems/Clock.hpp
     sources/systems/Clock.cpp
 

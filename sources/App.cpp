@@ -30,11 +30,14 @@
 #include "Texture.hpp"
 #include "components/Body.hpp"
 #include "components/Camera.hpp"
+#include "components/Celestial.hpp"
+#include "components/OrbitalBody.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
 #include "objects/FlyingCamera.hpp"
 #include "objects/ModelObject.hpp"
 #include "systems/Clock.hpp"
+#include "systems/OrbitalEngine.hpp"
 #include "systems/PhysicsEngine.hpp"
 #include "systems/RendererSystem.hpp"
 
@@ -53,7 +56,7 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
 {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-#if 1 // fullscreen
+#if 0 // fullscreen
     m_windowSize = { mode->width, mode->height };
     m_window = GlfwWindowPtr(glfwCreateWindow(m_windowSize.x, m_windowSize.y, windowTitle.c_str(), monitor, nullptr));
 #else
@@ -81,9 +84,6 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
     glfwSetFramebufferSizeCallback(m_window.get(), framebufferSizeCallback);
 }
 
-static bool showCursor = false;
-static float fov = 60.0f;
-static float n_f[2] = { 0.1f, 100.0f };
 void App::run()
 {
     JPH::RegisterDefaultAllocator();
@@ -98,23 +98,31 @@ void App::run()
 
     auto& input = m_registry.ctx().get<Input>();
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
+    auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
 
-    FlyingCamera _cam = { m_registry, glm::vec3 { 0.0f, 0.0f, 0.0f } };
+    FlyingCamera _cam = { m_registry, glm::vec3 { 0.0f, 0.0f, 30.0f } };
     auto& flyCamera = m_registry.ctx().emplace<std::reference_wrapper<FlyingCamera>>(_cam).get();
 
     auto renderTex = m_registry.ctx().emplace<std::shared_ptr<RenderTexture>>(std::make_shared<RenderTexture>(glm::ivec2 { 500, 300 }));
 
     RendererSystem renderer { m_registry };
 
-    auto& shader = renderer.getShader();
+    auto xzModel = std::make_shared<Model>("resources/models/xz.fbx");
+    auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");
 
-    auto cubesModel = std::make_shared<Model>("resources/models/xz.fbx");
-    auto rocketTexture = std::make_shared<Texture>("resources/images/xz.png");
+    auto xzTexture = std::make_shared<Texture>("resources/images/xz.png");
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
 
-    ModelObject cubes { m_registry, cubesModel, rocketTexture, whiteTexture };
+    ModelObject xz { m_registry, xzModel, xzTexture, whiteTexture };
+    ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
 
-    physics.createCollider(cubes.getEntity(), false);
+    xz.position() = { -20.0f, 0.0f, 0.0f };
+    xz.addComponent(OrbitalBody { .velicity = {0.0f, 0.0f, 4.0f}});
+    xz.addComponent(Picked { });
+
+    cube.addComponent(Celestial { 1000.0f });
+
+    physics.createCollider(xz.getEntity(), true);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -127,7 +135,8 @@ void App::run()
     while (m_running) {
         updateWindow();
         m_registry.ctx().get<Clock>().update();
-        physics.update();
+        // physics.update();
+        orbital.update();
         flyCamera.update();
 
         auto cameraEntity = m_registry.view<Camera, Transform>().front();
@@ -135,11 +144,6 @@ void App::run()
         auto view = camera.getView(cameraTransform.position);
 
         processInput(view, cameraTransform.position);
-
-        if (input.getKeyDown(GLFW_KEY_Q)) {
-            showCursor = !showCursor;
-            glfwSetInputMode(m_window.get(), GLFW_CURSOR, showCursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-        }
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

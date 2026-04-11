@@ -80,6 +80,7 @@ public:
     std::optional<entt::entity> pick(const Ray& ray) const noexcept;
 
     void addImpulse(entt::entity entity, glm::vec3 impulse) noexcept;
+    void addForce(entt::entity entity, glm::vec3 force) noexcept;
     glm::vec3 getVelocity(entt::entity entity) const noexcept;
 
 private:

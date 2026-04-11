@@ -10,7 +10,7 @@ public:
     template <typename T>
     void addComponent(const T& component) noexcept
     {
-        auto& comp = m_registry.get_or_emplace<T>(m_entity, component);
+        m_registry.get_or_emplace<T>(m_entity, component);
     }
 
     template <typename T>
