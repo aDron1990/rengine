@@ -14,16 +14,17 @@ Model::Model(const std::string& path)
 void Model::load(const std::string& path)
 {
     Assimp::Importer importer;
+    importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 1.f);
 
     const auto* scene = importer.ReadFile(
         path,
-        aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality | aiProcess_MakeLeftHanded);
+        aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_PreTransformVertices | aiProcess_GlobalScale);
 
     if (!scene || !scene->mRootNode) {
         throw std::runtime_error(importer.GetErrorString());
     }
 
-    processNode(scene->mRootNode, scene, glm::mat4(1.0f));
+    processNode(scene->mRootNode, scene);
 
     glm::vec3 center = (m_aabb.min + m_aabb.max) * 0.5f;
 
@@ -33,22 +34,17 @@ void Model::load(const std::string& path)
     m_localAABB.max = m_aabb.max - center;
 }
 
-void Model::processNode(aiNode* node, const aiScene* scene, const glm::mat4& parent)
+void Model::processNode(aiNode* node, const aiScene* scene)
 {
-    glm::mat4 local = glm::make_mat4(&node->mTransformation.a1);
-    glm::mat4 global = parent * local;
-
     for (unsigned i = 0; i < node->mNumMeshes; i++) {
         aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-
         Mesh mesh = processMesh(ai_mesh, scene);
-        updateAABB(mesh, global);
-
+        updateAABB(mesh);
         m_meshes.push_back(std::move(mesh));
     }
 
     for (unsigned i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene, global);
+        processNode(node->mChildren[i], scene);
     }
 }
 
@@ -134,11 +130,9 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
     return result;
 }
 
-void Model::updateAABB(const Mesh& mesh, const glm::mat4& transform) noexcept
+void Model::updateAABB(const Mesh& mesh) noexcept
 {
     for (const auto& v : mesh.vertices) {
-        // glm::vec4 worldPos = transform * glm::vec4(v.position, 1.0f);
-        // glm::vec3 p = glm::vec3(worldPos);
         glm::vec3 p = v.position;
 
         m_aabb.min.x = std::min(m_aabb.min.x, p.x);

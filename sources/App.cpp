@@ -108,13 +108,13 @@ void App::run()
 
     auto& shader = renderer.getShader();
 
-    auto rocketModel = std::make_shared<Model>("resources/rocket/scene.gltf");
+    auto cubesModel = std::make_shared<Model>("resources/models/cubes.fbx");
     auto rocketTexture = std::make_shared<Texture>("resources/rocket/textures/main_SMR_baseColor.jpeg");
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
 
-    ModelObject rocket { m_registry, rocketModel, rocketTexture, whiteTexture };
+    ModelObject cubes { m_registry, cubesModel, rocketTexture, whiteTexture };
 
-    physics.createCollider(rocket.getEntity(), false);
+    physics.createCollider(cubes.getEntity(), false);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -152,7 +152,7 @@ void App::run()
         ImGui::Begin("Camera");
         ImGui::DragFloat3("position", glm::value_ptr(cameraTransform.position), 0.025f);
         ImGui::DragFloat3("front", glm::value_ptr(camera.front), 0.025f);
-        ImGui::DragFloat2("near/far", n_f, 0.025f);
+        ImGui::DragFloat2("near/far", &camera.near, 0.025f);
         ImGui::DragFloat("fov", &camera.fov, 0.1f);
         ImGui::Image(renderTex->getId(), { 500, 300 }, { 0, 1 }, { 1, 0 });
         ImGui::End();

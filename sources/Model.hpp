@@ -13,9 +13,9 @@ public:
 
 private:
     void load(const std::string& path);
-    void processNode(aiNode* node, const aiScene* scene, const glm::mat4& parentTransform);
+    void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-    void updateAABB(const Mesh& mesh, const glm::mat4& transform) noexcept;
+    void updateAABB(const Mesh& mesh) noexcept;
 
 private:
     std::vector<Mesh> m_meshes;
