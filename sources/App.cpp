@@ -16,6 +16,7 @@
 #include <entt/entity/fwd.hpp>
 #include <entt/signal/fwd.hpp>
 #include <functional>
+#include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -189,7 +190,11 @@ void App::run()
                 auto& body = m_registry.get<OrbitalBody>(entity);
                 ImGui::SeparatorText("OrbitalBody");
                 ImGui::BeginDisabled(simulateOrbital);
-                ImGui::DragFloat3("orbital velocity", glm::value_ptr(body.velocity), 0.05);
+                ImGui::DragFloat3("orbital velocity vector", glm::value_ptr(body.velocity), 0.05);
+                ImGui::EndDisabled();
+                ImGui::BeginDisabled(true);
+                auto vel = glm::length(body.velocity);
+                ImGui::DragFloat("orbital velocity", &vel, 0.05);
                 ImGui::EndDisabled();
             }
 
