@@ -83,9 +83,3 @@ void FlyingCamera::rotate(float yaw, float pitch) noexcept
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     camera.front = glm::normalize(direction);
 }
-
-glm::mat4 FlyingCamera::getView() const noexcept
-{
-    auto [camera, transform] = m_registry.get<Camera, Transform>(m_entity);
-    return camera.getView(transform.position);
-}

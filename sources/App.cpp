@@ -15,7 +15,6 @@
 #include <GLFW/glfw3.h>
 #include <entt/entity/fwd.hpp>
 #include <entt/signal/fwd.hpp>
-#include <functional>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -35,8 +34,9 @@
 #include "components/OrbitalBody.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
-#include "objects/FlyingCamera.hpp"
 #include "objects/ModelObject.hpp"
+#include "objects/OrbitCamera.hpp"
+#include "objects/TestSatelite.hpp"
 #include "systems/Clock.hpp"
 #include "systems/OrbitalEngine.hpp"
 #include "systems/PhysicsEngine.hpp"
@@ -101,25 +101,22 @@ void App::run()
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
     auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
 
-    FlyingCamera _cam = { m_registry, glm::vec3 { 0.0f, 0.0f, 30.0f } };
-    auto& flyCamera = m_registry.ctx().emplace<std::reference_wrapper<FlyingCamera>>(_cam).get();
-
     auto renderTex = m_registry.ctx().emplace<std::shared_ptr<RenderTexture>>(std::make_shared<RenderTexture>(glm::ivec2 { 500, 300 }));
 
     RendererSystem renderer { m_registry };
 
-    auto xzModel = std::make_shared<Model>("resources/models/xz.fbx");
+    auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
     auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");
 
-    auto xzTexture = std::make_shared<Texture>("resources/images/xz.png");
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
 
-    ModelObject xz { m_registry, xzModel, xzTexture, whiteTexture };
+    TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
 
     xz.position() = { -20.0f, 0.0f, 0.0f };
-    xz.addComponent(OrbitalBody { .velocity = { 0.0f, 0.0f, 4.0f } });
     xz.addComponent(Picked { });
+
+    OrbitCamera cam { m_registry, xz.getEntity() };
 
     cube.addComponent(Celestial { 1000.0f });
 
@@ -140,7 +137,8 @@ void App::run()
         // physics.update();
         if (simulateOrbital)
             orbital.update();
-        flyCamera.update();
+        cam.update();
+        xz.update();
 
         auto cameraEntity = m_registry.view<Camera, Transform>().front();
         auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
@@ -180,7 +178,8 @@ void App::run()
 
             ImGui::SeparatorText("Transform");
             ImGui::DragFloat3("position", glm::value_ptr(transform.position), 0.025f);
-            ImGui::DragFloat3("rotation", glm::value_ptr(transform.rotation), 0.5f);
+            ImGui::DragFloat4("rotation", glm::value_ptr(transform.rotation), 0.025f);
+            transform.rotation = glm::normalize(transform.rotation);
             ImGui::DragFloat3("scale", glm::value_ptr(transform.scale), 0.025f);
 
             ImGui::SeparatorText("Renderer");
@@ -275,7 +274,8 @@ void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) 
     glm::vec2 mouseNDC = {
         (2.0f * mouseX / windowWidth) - 1.0f, 1.0f - (2.0f * mouseY / windowHeight)
     };
-    auto& camera = m_registry.ctx().get<std::reference_wrapper<FlyingCamera>>().get().getComponent<Camera>();
+
+    auto& camera = m_registry.get<Camera>(m_registry.view<Camera>().front());
     auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
 
     glm::vec4 clip = { mouseNDC.x, mouseNDC.y, -1.0f, 1.0f };

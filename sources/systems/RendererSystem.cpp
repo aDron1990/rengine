@@ -97,6 +97,7 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
 
     int drawed = 0;
     auto objects = m_registry.view<Transform, Renderer, BoundingBox>(entt::exclude<Transparent>);
+    LineBatch orientationLines;
     for (auto [entity, transform, renderer, bb] : objects.each()) {
         auto aabb = toGlobalAABB(bb, transform);
         if (!frustum.isVisible(aabb))
@@ -116,6 +117,9 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
         renderer.specular->bind(1);
 
         renderer.model->draw();
+
+        auto front = transform.position + (transform.rotation * glm::vec3(0, 0, -1));
+        orientationLines.push({ transform.position, front });
     }
 
     m_transparentShader.use();
@@ -124,7 +128,6 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
 
     auto tobjects = m_registry.view<Transform, Renderer, Transparent, BoundingBox>();
     std::vector<std::pair<float, entt::entity>> sorted;
-#if 1
     for (auto entity : tobjects) {
         auto& transform = tobjects.get<Transform>(entity);
         auto dist = glm::distance2(transform.position, cameraTransform.position);
@@ -146,8 +149,9 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
         m_transparentShader.setUniform(model, "model");
         renderer.texture->bind();
         renderer.model->draw();
+
+        orientationLines.push({ transform.position, transform.position + (transform.rotation * glm::vec3(0, 0, -1)) });
     }
-#endif
 
     ImGui::Begin("Render");
     ImGui::Text("FPS: %f", FPS);
@@ -160,6 +164,7 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
     m_linesShader.setUniform(view, "view");
     m_linesShader.setUniform(proj, "proj");
 
+    orientationLines.draw();
     LineBatch lines { };
     for (auto [_, bb, transform, renderer] : m_registry.view<BoundingBox, Transform, Renderer, Picked>().each()) {
         auto model = glm::mat4 { 1.0f };
@@ -186,9 +191,8 @@ void RendererSystem::render(const glm::mat4& proj) noexcept
     LineBatch orbitLines { };
     auto celView = m_registry.view<Celestial, Transform>();
     auto [celestial, celTransform] = m_registry.get<Celestial, Transform>(celView.front());
-    for (auto [e, transform, body] : m_registry.view<Transform, OrbitalBody, Picked>().each()) {
-        auto lines = orbital.calcOrbit(e, celView.front());
-        lines.draw();
+    for (auto [e, transform, body] : m_registry.view<Transform, OrbitalBody>().each()) {
+        body.orbit.draw();
     }
 }
 

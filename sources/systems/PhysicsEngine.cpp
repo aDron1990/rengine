@@ -54,9 +54,8 @@ void PhysicsEngine::update() noexcept
         JPH::Quat rotation;
         auto& ibody = m_world.GetBodyInterface();
         ibody.GetPositionAndRotation(body.bodyID, position, rotation);
-        auto rot = rotation.GetEulerAngles();
         transform.position = { position.GetX(), position.GetY(), position.GetZ() };
-        transform.rotation = { glm::degrees(rot.GetX()), glm::degrees(rot.GetY()), glm::degrees(rot.GetZ()) };
+        transform.rotation = { rotation.GetXYZW().GetW(), rotation.GetXYZW().GetX(), rotation.GetXYZW().GetY(), rotation.GetXYZW().GetZ() };
     }
 }
 
@@ -75,7 +74,7 @@ void PhysicsEngine::createCollider(entt::entity entity, bool dynamic)
 
     auto size = JPH::Vec3 { (bb.max.x - bb.min.x) / 2.0f, (bb.max.y - bb.min.y) / 2.0f, (bb.max.z - bb.min.z) / 2.0f };
     auto position = JPH::Vec3 { transform.position.x, transform.position.y, transform.position.z };
-    glm::quat quat = transform.getQuat();
+    glm::quat quat = transform.rotation;
     auto rotation = JPH::Quat { quat.x, quat.y, quat.z, quat.w };
 
     glm::vec3 offset = (bb.min + bb.max) * 0.5f;

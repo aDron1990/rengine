@@ -17,11 +17,9 @@ public:
         Down };
     void move(Direction dir) noexcept;
     void rotate(float yaw, float pitch) noexcept;
-    glm::mat4 getView() const noexcept;
 
 private:
     float m_yaw = -90.0f;
     float m_pitch = 0.0f;
     const float SPEED = 5.5f;
-    glm::mat4 m_view { 1.0f };
 };

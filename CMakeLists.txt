@@ -47,8 +47,12 @@ add_executable(${PROJECT_NAME}
 
     sources/objects/FlyingCamera.hpp
     sources/objects/FlyingCamera.cpp
+    sources/objects/OrbitCamera.hpp
+    sources/objects/OrbitCamera.cpp
     sources/objects/ModelObject.hpp
     sources/objects/ModelObject.cpp
+    sources/objects/TestSatelite.cpp
+    sources/objects/TestSatelite.hpp
 
     sources/components/Transform.hpp
     sources/components/Transform.cpp

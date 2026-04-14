@@ -2,6 +2,8 @@
 
 #include <entt/entt.hpp>
 
+#include <tuple>
+
 class Object {
 public:
     Object(entt::registry& registry);
@@ -10,7 +12,7 @@ public:
     template <typename T>
     void addComponent(const T& component) noexcept
     {
-        m_registry.get_or_emplace<T>(m_entity, component);
+        (void)m_registry.get_or_emplace<T>(m_entity, component);
     }
 
     template <typename T>

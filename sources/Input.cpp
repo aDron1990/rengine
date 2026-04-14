@@ -12,12 +12,14 @@ bool Input::getButtonDown(int button) const noexcept { return m_buttonsDown[butt
 bool Input::getButtonUp(int button) const noexcept { return m_buttonsUp[button]; }
 glm::ivec2 Input::getCursorPosition() const noexcept { return m_cursorPos; }
 std::optional<glm::ivec2> Input::getCursorDelta() const noexcept { return m_cursorDelta; }
+std::optional<glm::ivec2> Input::getScrollDelta() const noexcept { return m_scrollDelta; }
 
 Input::~Input()
 {
     glfwSetKeyCallback(m_window, nullptr);
     glfwSetMouseButtonCallback(m_window, nullptr);
     glfwSetCursorPosCallback(m_window, nullptr);
+    glfwSetScrollCallback(m_window, nullptr);
 }
 
 void Input::setGlfwWindow(GLFWwindow* window) noexcept
@@ -26,6 +28,7 @@ void Input::setGlfwWindow(GLFWwindow* window) noexcept
     glfwSetKeyCallback(m_window, keyCallback);
     glfwSetMouseButtonCallback(m_window, buttonCallback);
     glfwSetCursorPosCallback(m_window, cursorCallback);
+    glfwSetScrollCallback(m_window, scrollCallback);
 }
 
 void Input::update() noexcept
@@ -35,6 +38,7 @@ void Input::update() noexcept
     std::memset(m_buttonsDown, 0, sizeof(m_buttonsDown));
     std::memset(m_buttonsUp, 0, sizeof(m_buttonsUp));
     m_cursorDelta.reset();
+    m_scrollDelta.reset();
 }
 
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action,
@@ -81,4 +85,11 @@ void Input::cursorCallback(GLFWwindow* window, double xpos, double ypos) noexcep
         input.m_cursorDelta = input.m_cursorPos - newPos;
 
     input.m_cursorPos = newPos;
+}
+
+void Input::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) noexcept
+{
+    auto& app = *static_cast<App*>(glfwGetWindowUserPointer(window));
+    auto& input = app.getInput();
+    input.m_scrollDelta = glm::ivec2 { static_cast<int>(xoffset), static_cast<int>(yoffset) };
 }
