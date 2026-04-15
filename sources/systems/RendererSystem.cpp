@@ -1,16 +1,17 @@
 #include "RendererSystem.hpp"
 #include "BoundingBox.hpp"
-#include "Cubemap.hpp"
 #include "Frustum.hpp"
-#include "LineBatch.hpp"
 #include "OrbitalEngine.hpp"
 #include "components/Camera.hpp"
 #include "components/Celestial.hpp"
 #include "components/OrbitalBody.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
+#include "graphics/Cubemap.hpp"
+#include "graphics/LineBatch.hpp"
 #include "systems/Clock.hpp"
 #include "utils.hpp"
+
 
 #include <array>
 #include <entt/entity/fwd.hpp>

@@ -1,7 +1,5 @@
 #include "Mesh.hpp"
 
-#include "third-party/tiny_obj_loader.h"
-
 void Mesh::draw() const noexcept
 {
     vao.bind();

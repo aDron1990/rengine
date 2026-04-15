@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mesh.hpp"
+#include "graphics/Mesh.hpp"
 #include <assimp/scene.h>
 #include <vector>
 
@@ -21,5 +21,5 @@ private:
     std::vector<Mesh> m_meshes;
     BoundingBox m_aabb;
     BoundingBox m_localAABB;
-    glm::vec3 m_offset {0.0f};
+    glm::vec3 m_offset { 0.0f };
 };

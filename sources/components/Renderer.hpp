@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Model.hpp"
-#include "Texture.hpp"
+#include "graphics/Texture.hpp"
 
 #include <memory>
 

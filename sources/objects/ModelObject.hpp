@@ -3,7 +3,7 @@
 #include "Model.hpp"
 #include "Object.hpp"
 
-#include "Texture.hpp"
+#include "graphics/Texture.hpp"
 
 class ModelObject : public Object {
 public:

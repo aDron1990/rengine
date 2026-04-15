@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Buffer.hpp"
-#include "Shader.hpp"
-#include "VertexArray.hpp"
+#include "graphics/Buffer.hpp"
+#include "graphics/Shader.hpp"
+#include "graphics/VertexArray.hpp"
 
 #include <entt/entity/fwd.hpp>
 #include <entt/entt.hpp>

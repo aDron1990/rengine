@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LineBatch.hpp"
+#include "graphics/LineBatch.hpp"
 #include <entt/entity/fwd.hpp>
 #include <entt/entt.hpp>
 #include <glm/ext/vector_float3.hpp>

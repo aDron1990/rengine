@@ -22,27 +22,19 @@ add_executable(${PROJECT_NAME}
     sources/App.hpp
     sources/Input.hpp
     sources/Input.cpp
-    sources/Buffer.hpp
-
-    sources/Cubemap.hpp
-    sources/RenderTarget.hpp
-    sources/RenderTexture.hpp
-    sources/RenderTexture.cpp
-
-    sources/Mesh.hpp
-    sources/Mesh.cpp
+    sources/systems/RendererSystem.hpp
+    sources/systems/RendererSystem.cpp
+    sources/systems/PhysicsEngine.hpp
+    sources/systems/PhysicsEngine.cpp
+    sources/systems/OrbitalEngine.hpp
+    sources/systems/OrbitalEngine.cpp
+    sources/systems/Clock.hpp
+    sources/systems/Clock.cpp
+    
     sources/Model.hpp
     sources/Model.cpp
     sources/Object.hpp
     sources/Object.cpp
-    sources/Shader.hpp
-    sources/Shader.cpp
-    sources/Texture.hpp
-    sources/Texture.cpp
-    sources/VertexArray.hpp
-    sources/VertexArray.cpp
-    sources/LineBatch.hpp
-    sources/LineBatch.cpp
     sources/BoundingBox.hpp
 
     sources/objects/FlyingCamera.hpp
@@ -64,18 +56,23 @@ add_executable(${PROJECT_NAME}
     sources/components/Celestial.hpp
     sources/components/OrbitalBody.hpp
 
-    sources/systems/RendererSystem.hpp
-    sources/systems/RendererSystem.cpp
-    sources/systems/PhysicsEngine.hpp
-    sources/systems/PhysicsEngine.cpp
-    sources/systems/OrbitalEngine.hpp
-    sources/systems/OrbitalEngine.cpp
-    sources/systems/Clock.hpp
-    sources/systems/Clock.cpp
+    sources/graphics/Buffer.hpp
+    sources/graphics/Cubemap.hpp
+    sources/graphics/RenderTarget.hpp
+    sources/graphics/RenderTexture.hpp
+    sources/graphics/RenderTexture.cpp
+    sources/graphics/Shader.hpp
+    sources/graphics/Shader.cpp
+    sources/graphics/Texture.hpp
+    sources/graphics/Texture.cpp
+    sources/graphics/Mesh.hpp
+    sources/graphics/Mesh.cpp
+    sources/graphics/LineBatch.hpp
+    sources/graphics/LineBatch.cpp
+    sources/graphics/VertexArray.hpp
+    sources/graphics/VertexArray.cpp
 
     sources/third-party/stb_image.h
-    sources/third-party/tiny_obj_loader.h
-    sources/third-party/tiny_obj_loader.cc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)

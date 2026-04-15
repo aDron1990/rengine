@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LineBatch.hpp"
+#include "graphics/LineBatch.hpp"
 #include <glm/glm.hpp>
 
 struct OrbitalBody {

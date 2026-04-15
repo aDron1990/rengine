@@ -1,10 +1,11 @@
 #include "OrbitalEngine.hpp"
-#include "LineBatch.hpp"
 #include "components/Celestial.hpp"
 #include "components/OrbitalBody.hpp"
 #include "components/Transform.hpp"
+#include "graphics/LineBatch.hpp"
 #include "systems/PhysicsEngine.hpp"
 #include <glm/geometric.hpp>
+
 
 OrbiralEngine::OrbiralEngine(entt::registry& registry)
     : m_registry { registry }
