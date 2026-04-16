@@ -2,8 +2,8 @@
 
 #include "graphics/Buffer.hpp"
 #include "graphics/RenderBackend.hpp"
-#include "graphics/Shader.hpp"
 #include "graphics/VertexArray.hpp"
+#include "graphics/types.hpp"
 
 #include <entt/entity/fwd.hpp>
 #include <entt/entt.hpp>
@@ -15,17 +15,16 @@ public:
     RenderSystem(entt::registry& registry);
 
     void render(const glm::mat4& proj) noexcept;
-    Shader& getShader() noexcept { return m_shader; }
 
 private:
     entt::registry& m_registry;
 
     std::shared_ptr<RenderBackend> m_backend;
 
-    Shader m_shader;
-    Shader m_skyboxShader;
-    Shader m_transparentShader;
-    Shader m_linesShader;
+    PipelineID m_mainPipe;
+    PipelineID m_skyboxPipe;
+    PipelineID m_transparentPipe;
+    PipelineID m_linesPipe;
     GlTexture m_skyboxTexture { };
     VertexArray m_skyboxVAO { };
     VertexBuffer m_skyboxVBO { };

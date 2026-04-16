@@ -28,13 +28,14 @@
 
 RenderSystem::RenderSystem(entt::registry& registry)
     : m_registry { registry }
-    , m_shader { "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }
-    , m_skyboxShader { "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }
-    , m_transparentShader { "resources/shaders/transparent_v.glsl", "resources/shaders/transparent_f.glsl" }
-    , m_linesShader { "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }
 {
     m_backend.reset(new OglRenderBackend);
     m_registry.ctx().emplace<std::shared_ptr<RenderBackend>>(m_backend);
+
+    m_mainPipe = m_backend->createPipeline({ "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }, RenderState { });
+    m_transparentPipe = m_backend->createPipeline({ "resources/shaders/transparent_v.glsl", "resources/shaders/transparent_f.glsl" }, RenderState { });
+    m_skyboxPipe = m_backend->createPipeline({ "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }, RenderState { .depth = false });
+    m_linesPipe = m_backend->createPipeline({ "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }, RenderState { });
 
     // Skybox
     m_skyboxTexture.reset(
@@ -73,31 +74,25 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
     m_backend->clear();
 
     auto view_ = glm::mat4(glm::mat3(view));
-    glDepthMask(GL_FALSE);
-    m_skyboxShader.use();
-    m_skyboxShader.setUniform(view_, "view");
-    m_skyboxShader.setUniform(proj, "proj");
+    m_backend->bindPipeline(m_skyboxPipe);
+    m_backend->setValue(m_skyboxPipe, "view", view_);
+    m_backend->setValue(m_skyboxPipe, "proj", proj);
     m_skyboxVAO.bind();
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxTexture.get());
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthMask(GL_TRUE);
 
-    m_shader.use();
-
-    m_shader.setUniform(view, "view");
-    m_shader.setUniform(proj, "proj");
+    m_backend->bindPipeline(m_mainPipe);
+    m_backend->setValue(m_mainPipe, "view", view);
+    m_backend->setValue(m_mainPipe, "proj", proj);
 
     Frustum frustum { proj * view };
 
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
-    m_shader.setUniform(lightPos, "light.position");
-    m_shader.setUniform(glm::vec3 { 0.2f, 0.2f, 0.2f }, "light.ambient");
-    m_shader.setUniform(glm::vec3 { 0.5f, 0.5f, 0.5f }, "light.diffuse");
-    m_shader.setUniform(glm::vec3 { 1.0f, 1.0f, 1.0f }, "light.specular");
-    m_shader.setUniform(cameraTransform.position, "viewPos");
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    m_backend->setValue(m_mainPipe, "light.position", lightPos);
+    m_backend->setValue(m_mainPipe, "light.ambient", glm::vec3 { 0.2f, 0.2f, 0.2f });
+    m_backend->setValue(m_mainPipe, "light.diffuse", glm::vec3 { 0.5f, 0.5f, 0.5f });
+    m_backend->setValue(m_mainPipe, "light.specular", glm::vec3 { 1.0f, 1.0f, 1.0f });
+    m_backend->setValue(m_mainPipe, "viewPos", cameraTransform.position);
 
     int drawed = 0;
     auto objects = m_registry.view<Transform, Renderer, BoundingBox>(entt::exclude<Transparent>);
@@ -109,29 +104,27 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
         drawed++;
 
         auto model = transform.getMatrix();
-        m_shader.setUniform(model, "model");
+        m_backend->setValue(m_mainPipe, "model", model);
+        m_backend->setValue(m_mainPipe, "material.ambient", glm::vec3 { 0.8f, 0.8f, 0.8f });
+        m_backend->setValue(m_mainPipe, "material.diffuse", 0);
+        m_backend->setValue(m_mainPipe, "material.specular", 1);
+        m_backend->setValue(m_mainPipe, "material.shininess", 32.0f);
 
-        m_shader.setUniform(glm::vec3 { 0.8f, 0.8f, 0.8f }, "material.ambient");
-        m_shader.setUniform(glm::vec3 { 0.5f, 0.5f, 0.5f }, "material.specular");
-        m_shader.setUniform(0, "material.diffuse");
-        m_shader.setUniform(1, "material.specular");
-        m_shader.setUniform(32.0f, "material.shininess");
-
-        m_backend->bind(renderer.texture, 0);
-        m_backend->bind(renderer.specular, 1);
+        m_backend->bindTexture(renderer.texture, 0);
+        m_backend->bindTexture(renderer.specular, 1);
 
         auto& meshes = renderer.model->getMeshes();
         for (auto& mesh : meshes) {
-            m_backend->draw(mesh.meshID);
+            m_backend->drawMesh(mesh.meshID);
         }
 
         auto front = transform.position + (transform.rotation * glm::vec3(0, 0, -1));
         orientationLines.push_back({ transform.position, front });
     }
 
-    m_transparentShader.use();
-    m_transparentShader.setUniform(view, "view");
-    m_transparentShader.setUniform(proj, "proj");
+    m_backend->bindPipeline(m_transparentPipe);
+    m_backend->setValue(m_transparentPipe, "view", view);
+    m_backend->setValue(m_transparentPipe, "proj", proj);
 
     auto tobjects = m_registry.view<Transform, Renderer, Transparent, BoundingBox>();
     std::vector<std::pair<float, entt::entity>> sorted;
@@ -153,13 +146,14 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
         drawed++;
 
         auto model = transform.getMatrix();
-        m_transparentShader.setUniform(model, "model");
-        m_backend->bind(renderer.texture, 0);
-        m_backend->bind(renderer.specular, 1);
+        m_backend->setValue(m_transparentPipe, "model", model);
+
+        m_backend->bindTexture(renderer.texture, 0);
+        m_backend->bindTexture(renderer.specular, 1);
 
         auto& meshes = renderer.model->getMeshes();
         for (auto& mesh : meshes) {
-            m_backend->draw(mesh.meshID);
+            m_backend->drawMesh(mesh.meshID);
         }
 
         auto front = transform.position + (transform.rotation * glm::vec3(0, 0, -1));
@@ -173,11 +167,11 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    m_linesShader.use();
-    m_linesShader.setUniform(view, "view");
-    m_linesShader.setUniform(proj, "proj");
+    m_backend->bindPipeline(m_linesPipe);
+    m_backend->setValue(m_linesPipe, "view", view);
+    m_backend->setValue(m_linesPipe, "proj", proj);
 
-    m_backend->draw(orientationLines);
+    m_backend->drawLines(orientationLines);
 
     std::vector<Line> lines { };
     for (auto [_, bb, transform, renderer] : m_registry.view<BoundingBox, Transform, Renderer, Picked>().each()) {
@@ -199,13 +193,13 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
         }
     }
 
-    m_backend->draw(lines);
+    m_backend->drawLines(lines);
 
     auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
     auto celView = m_registry.view<Celestial, Transform>();
     auto [celestial, celTransform] = m_registry.get<Celestial, Transform>(celView.front());
     for (auto [e, transform, body] : m_registry.view<Transform, OrbitalBody>().each()) {
-        m_backend->draw(body.orbit);
+        m_backend->drawLines(body.orbit);
     }
 }
 

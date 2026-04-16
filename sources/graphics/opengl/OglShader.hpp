@@ -1,15 +1,15 @@
 #pragma once
 
-#include "GlHandle.hpp"
+#include "../GlHandle.hpp"
 
 #include <GL/glew.h>
 
 #include <filesystem>
 #include <string>
 
-class Shader {
+class OglShader {
 public:
-    Shader(const std::filesystem::path vertexFilePath,
+    OglShader(const std::filesystem::path vertexFilePath,
         const std::filesystem::path fragmentFilePath);
 
     void use() const noexcept;

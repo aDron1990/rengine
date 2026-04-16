@@ -1,10 +1,10 @@
-#include "Shader.hpp"
+#include "OglShader.hpp"
 #include "utils/utils.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Shader::Shader(const std::filesystem::path vertexFilePath,
+OglShader::OglShader(const std::filesystem::path vertexFilePath,
     const std::filesystem::path fragmentFilePath)
     : m_program { glCreateProgram() }
 {
@@ -17,7 +17,7 @@ Shader::Shader(const std::filesystem::path vertexFilePath,
     linkProgram(vertex, fragment);
 }
 
-GlShader Shader::compileShader(const std::string& code, GLenum shaderType)
+GlShader OglShader::compileShader(const std::string& code, GLenum shaderType)
 {
     int success;
     char infoLog[512];
@@ -37,7 +37,7 @@ GlShader Shader::compileShader(const std::string& code, GLenum shaderType)
     return GlShader { shader };
 }
 
-void Shader::linkProgram(const GlShader& vertex, const GlShader& fragment)
+void OglShader::linkProgram(const GlShader& vertex, const GlShader& fragment)
 {
     int success;
     char infoLog[512];
@@ -52,10 +52,10 @@ void Shader::linkProgram(const GlShader& vertex, const GlShader& fragment)
     }
 }
 
-void Shader::use() const noexcept { glUseProgram(m_program.get()); }
+void OglShader::use() const noexcept { glUseProgram(m_program.get()); }
 
 template <>
-void Shader::setUniform<glm::mat4>(const glm::mat4& value,
+void OglShader::setUniform<glm::mat4>(const glm::mat4& value,
     const std::string& name) noexcept
 {
     auto ptr = glGetUniformLocation(m_program.get(), name.c_str());
@@ -63,7 +63,7 @@ void Shader::setUniform<glm::mat4>(const glm::mat4& value,
 }
 
 template <>
-void Shader::setUniform<glm::vec3>(const glm::vec3& value,
+void OglShader::setUniform<glm::vec3>(const glm::vec3& value,
     const std::string& name) noexcept
 {
     auto ptr = glGetUniformLocation(m_program.get(), name.c_str());
@@ -71,7 +71,7 @@ void Shader::setUniform<glm::vec3>(const glm::vec3& value,
 }
 
 template <>
-void Shader::setUniform<float>(const float& value,
+void OglShader::setUniform<float>(const float& value,
     const std::string& name) noexcept
 {
     auto ptr = glGetUniformLocation(m_program.get(), name.c_str());
@@ -79,7 +79,7 @@ void Shader::setUniform<float>(const float& value,
 }
 
 template <>
-void Shader::setUniform<int>(const int& value,
+void OglShader::setUniform<int>(const int& value,
     const std::string& name) noexcept
 {
     auto ptr = glGetUniformLocation(m_program.get(), name.c_str());

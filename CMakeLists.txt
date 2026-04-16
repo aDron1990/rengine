@@ -65,8 +65,6 @@ add_executable(${PROJECT_NAME}
     sources/graphics/Buffer.hpp
     sources/graphics/Cubemap.hpp
     sources/graphics/RenderTarget.hpp
-    sources/graphics/Shader.hpp
-    sources/graphics/Shader.cpp
     sources/graphics/Mesh.hpp
     sources/graphics/Image.hpp
     sources/graphics/VertexArray.hpp
@@ -76,6 +74,9 @@ add_executable(${PROJECT_NAME}
     sources/graphics/opengl/OglRenderBackend.cpp
     sources/graphics/opengl/OglMesh.hpp
     sources/graphics/opengl/OglTexture.hpp
+    sources/graphics/opengl/OglPipeline.hpp
+    sources/graphics/opengl/OglShader.hpp
+    sources/graphics/opengl/OglShader.cpp
 
     sources/third-party/stb_image.h
     sources/third-party/stb_image.c
