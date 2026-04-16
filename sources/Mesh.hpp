@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vector>
+
 #include "BoundingBox.hpp"
+#include "AABB.hpp"
 #include "Buffer.hpp"
 #include "VertexArray.hpp"
 #include "utils.hpp"
