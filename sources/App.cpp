@@ -32,6 +32,7 @@
 #include "components/OrbitalBody.hpp"
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
+#include "graphics/RenderBackend.hpp"
 #include "graphics/RenderTexture.hpp"
 #include "graphics/Texture.hpp"
 #include "objects/ModelObject.hpp"
@@ -107,6 +108,14 @@ void App::run()
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
     auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");
+
+    auto renderBack = m_registry.ctx().get<std::shared_ptr<RenderBackend>>();
+    for (auto& mesh : xzModel->getMeshes()) {
+        mesh.meshID = renderBack->createMesh(mesh.vertices, mesh.indices);
+    }
+    for (auto& mesh : cubeModel->getMeshes()) {
+        mesh.meshID = renderBack->createMesh(mesh.vertices, mesh.indices);
+    }
 
     auto whiteTexture = std::make_shared<Texture>("resources/images/white.png");
 

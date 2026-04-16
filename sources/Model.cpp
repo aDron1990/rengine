@@ -3,7 +3,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 
@@ -106,28 +105,6 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
     result.aabb = aabb;
 
-    result.vao.bind();
-    result.vbo = VertexBuffer {
-        result.vertices.data(),
-        result.vertices.size() * sizeof(Vertex)
-    };
-    result.ibo = IndexBuffer {
-        result.indices.data(),
-        result.indices.size() * sizeof(uint32_t)
-    };
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Vertex), (void*)offsetof(Vertex, position));
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Vertex), (void*)offsetof(Vertex, normal));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-        sizeof(Vertex), (void*)offsetof(Vertex, tex_coords));
-    glEnableVertexAttribArray(2);
-
     return result;
 }
 
@@ -146,13 +123,6 @@ void Model::updateAABB(const Mesh& mesh) noexcept
     }
 }
 
-void Model::draw() const
-{
-    for (const auto& mesh : m_meshes) {
-        mesh.draw();
-    }
-}
-
 BoundingBox Model::getAABB() const noexcept
 {
     return m_aabb;
@@ -161,4 +131,14 @@ BoundingBox Model::getAABB() const noexcept
 BoundingBox Model::getLocalAABB() const noexcept
 {
     return m_localAABB;
+}
+
+const std::vector<Mesh>& Model::getMeshes() const noexcept
+{
+    return m_meshes;
+}
+
+std::vector<Mesh>& Model::getMeshes() noexcept
+{
+    return m_meshes;
 }

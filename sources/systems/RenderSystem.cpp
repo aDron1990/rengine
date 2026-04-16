@@ -8,6 +8,7 @@
 #include "components/Renderer.hpp"
 #include "components/Transform.hpp"
 #include "graphics/Cubemap.hpp"
+#include "graphics/RenderBackend.hpp"
 #include "systems/Clock.hpp"
 
 #include "graphics/opengl/OglRenderBackend.hpp"
@@ -16,6 +17,7 @@
 #include <entt/entity/fwd.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <imgui.h>
+#include <memory>
 #include <numeric>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -32,6 +34,8 @@ RenderSystem::RenderSystem(entt::registry& registry)
     , m_linesShader { "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }
 {
     m_backend.reset(new OglRenderBackend);
+    m_registry.ctx().emplace<std::shared_ptr<RenderBackend>>(m_backend);
+
     // Skybox
     m_skyboxTexture.reset(
         loadCubemap({ "resources/images/space_skybox/right.png",
@@ -116,7 +120,10 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
         renderer.texture->bind(0);
         renderer.specular->bind(1);
 
-        renderer.model->draw();
+        auto& meshes = renderer.model->getMeshes();
+        for (auto& mesh : meshes) {
+            m_backend->draw(mesh.meshID);
+        }
 
         auto front = transform.position + (transform.rotation * glm::vec3(0, 0, -1));
         orientationLines.push_back({ transform.position, front });
@@ -148,7 +155,11 @@ void RenderSystem::render(const glm::mat4& proj) noexcept
         auto model = transform.getMatrix();
         m_transparentShader.setUniform(model, "model");
         renderer.texture->bind();
-        renderer.model->draw();
+
+        auto& meshes = renderer.model->getMeshes();
+        for (auto& mesh : meshes) {
+            m_backend->draw(mesh.meshID);
+        }
 
         auto front = transform.position + (transform.rotation * glm::vec3(0, 0, -1));
         orientationLines.push_back({ transform.position, front });

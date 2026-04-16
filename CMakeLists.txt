@@ -60,6 +60,7 @@ add_executable(${PROJECT_NAME}
     sources/components/OrbitalBody.hpp
 
     sources/graphics/RenderBackend.hpp
+    sources/graphics/types.hpp
     sources/graphics/GlHandle.hpp
     sources/graphics/Buffer.hpp
     sources/graphics/Cubemap.hpp
@@ -71,12 +72,12 @@ add_executable(${PROJECT_NAME}
     sources/graphics/Texture.hpp
     sources/graphics/Texture.cpp
     sources/graphics/Mesh.hpp
-    sources/graphics/Mesh.cpp
     sources/graphics/VertexArray.hpp
     sources/graphics/VertexArray.cpp
 
     sources/graphics/opengl/OglRenderBackend.hpp
     sources/graphics/opengl/OglRenderBackend.cpp
+    sources/graphics/opengl/OglMesh.hpp
 
     sources/third-party/stb_image.h
 )

@@ -20,7 +20,7 @@ public:
 private:
     entt::registry& m_registry;
 
-    std::unique_ptr<RenderBackend> m_backend;
+    std::shared_ptr<RenderBackend> m_backend;
 
     Shader m_shader;
     Shader m_skyboxShader;

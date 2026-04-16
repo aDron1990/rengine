@@ -7,9 +7,10 @@
 class Model {
 public:
     Model(const std::string& path);
-    void draw() const;
     BoundingBox getAABB() const noexcept;
     BoundingBox getLocalAABB() const noexcept;
+    const std::vector<Mesh>& getMeshes() const noexcept;
+    std::vector<Mesh>& Model::getMeshes() noexcept;
 
 private:
     void load(const std::string& path);
