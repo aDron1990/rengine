@@ -1,4 +1,4 @@
-#include "RendererSystem.hpp"
+#include "RenderSystem.hpp"
 #include "BoundingBox.hpp"
 #include "Frustum.hpp"
 #include "OrbitalEngine.hpp"
@@ -24,7 +24,7 @@
 #include <glm/geometric.hpp>
 #include <vector>
 
-RendererSystem::RendererSystem(entt::registry& registry)
+RenderSystem::RenderSystem(entt::registry& registry)
     : m_registry { registry }
     , m_shader { "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }
     , m_skyboxShader { "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }
@@ -51,7 +51,7 @@ RendererSystem::RendererSystem(entt::registry& registry)
 std::array<Line, 12> toLines(const BoundingBox& aabb, const Transform& transform) noexcept;
 std::array<Line, 12> toLinesAligned(const BoundingBox& aabb, const Transform& transform) noexcept;
 
-void RendererSystem::render(const glm::mat4& proj) noexcept
+void RenderSystem::render(const glm::mat4& proj) noexcept
 {
     m_lastFrametimes[m_currentFrame] = m_registry.ctx().get<Clock>().getDelta();
     m_currentFrame = (m_currentFrame + 1) % FRAMES;

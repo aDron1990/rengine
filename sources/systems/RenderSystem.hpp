@@ -10,9 +10,9 @@
 #include <memory>
 #include <sys/stat.h>
 
-class RendererSystem {
+class RenderSystem {
 public:
-    RendererSystem(entt::registry& registry);
+    RenderSystem(entt::registry& registry);
 
     void render(const glm::mat4& proj) noexcept;
     Shader& getShader() noexcept { return m_shader; }

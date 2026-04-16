@@ -40,7 +40,7 @@
 #include "systems/Clock.hpp"
 #include "systems/OrbitalEngine.hpp"
 #include "systems/PhysicsEngine.hpp"
-#include "systems/RendererSystem.hpp"
+#include "systems/RenderSystem.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -103,7 +103,7 @@ void App::run()
 
     auto renderTex = m_registry.ctx().emplace<std::shared_ptr<RenderTexture>>(std::make_shared<RenderTexture>(glm::ivec2 { 500, 300 }));
 
-    RendererSystem renderer { m_registry };
+    RenderSystem renderer { m_registry };
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
     auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");

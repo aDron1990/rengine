@@ -25,8 +25,8 @@ add_executable(${PROJECT_NAME}
     sources/App.hpp
     sources/Input.hpp
     sources/Input.cpp
-    sources/systems/RendererSystem.hpp
-    sources/systems/RendererSystem.cpp
+    sources/systems/RenderSystem.hpp
+    sources/systems/RenderSystem.cpp
     sources/systems/PhysicsEngine.hpp
     sources/systems/PhysicsEngine.cpp
     sources/systems/OrbitalEngine.hpp
