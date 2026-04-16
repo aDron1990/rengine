@@ -1,22 +1,17 @@
 #pragma once
 
 #include <vector>
-
+#include "BoundingBox.hpp"
 #include "Buffer.hpp"
 #include "VertexArray.hpp"
 #include "utils.hpp"
 
-class Mesh {
-public:
-    Mesh(const std::string& objPath);
-
+struct Mesh {
     void draw() const noexcept;
-
-private:
-    void loadObj(const std::string& objPath);
-
-private:
-    std::vector<Vertex> m_vertices;
-    VertexBuffer m_vbo;
-    VertexArray m_vao;
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    VertexBuffer vbo;
+    VertexArray vao;
+    IndexBuffer ibo;
+    BoundingBox aabb;
 };

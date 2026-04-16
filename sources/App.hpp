@@ -1,9 +1,10 @@
 #pragma once
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <entt/entt.hpp>
 #include <string>
 
-#include "Camera.hpp"
 #include "Input.hpp"
 #include "utils.hpp"
 
@@ -11,12 +12,16 @@ class App {
 public:
     App(int windowWidth, int windowHeight, const std::string& windowTitle);
     void run();
-    Input& getInput() noexcept;
+    Input& getInput() noexcept { return m_registry.ctx().get<Input>(); };
 
 private:
     void updateWindow() noexcept;
-    void processInput() noexcept;
+    void processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) noexcept;
     void close() noexcept;
+
+private:
+    static void windowCloseCallback(GLFWwindow* window) noexcept;
+    static void framebufferSizeCallback(GLFWwindow* window, int width, int height) noexcept;
 
 private:
     App(const App&) = delete;
@@ -25,22 +30,14 @@ private:
     App& operator=(App&&) = delete;
 
 private:
-    static void mouseCallback(GLFWwindow* window, double xpos,
-        double ypos) noexcept;
+    entt::registry m_registry;
+    entt::dispatcher m_dispatcher;
 
-private:
     GlfwContext m_glfwContext;
     GlfwWindowPtr m_window;
-    Input m_input;
-    Camera m_camera { glm::vec3 { 0.0f, 0.0f, 3.0f } };
-    entt::registry m_registry;
 
     glm::ivec2 m_windowSize;
     bool m_running = true;
-
-    bool m_firstMouse = true;
-    double m_lastX { };
-    double m_lastY { };
 
     float m_yaw = -90.0f;
     float m_pitch = 0.0f;

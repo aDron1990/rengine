@@ -10,22 +10,29 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(Jolt CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
     sources/main.cpp
     sources/utils.hpp
+    sources/Events.hpp
 
     sources/App.cpp
     sources/App.hpp
     sources/Input.hpp
     sources/Input.cpp
     sources/Buffer.hpp
-    sources/Camera.hpp
-    sources/Camera.cpp
+
     sources/Cubemap.hpp
-    sources/Cubemap.cpp
+    sources/RenderTarget.hpp
+    sources/RenderTexture.hpp
+    sources/RenderTexture.cpp
+
     sources/Mesh.hpp
     sources/Mesh.cpp
+    sources/Model.hpp
+    sources/Model.cpp
     sources/Object.hpp
     sources/Object.cpp
     sources/Shader.hpp
@@ -34,14 +41,37 @@ add_executable(${PROJECT_NAME}
     sources/Texture.cpp
     sources/VertexArray.hpp
     sources/VertexArray.cpp
+    sources/LineBatch.hpp
+    sources/LineBatch.cpp
+    sources/BoundingBox.hpp
+
+    sources/objects/FlyingCamera.hpp
+    sources/objects/FlyingCamera.cpp
+    sources/objects/OrbitCamera.hpp
+    sources/objects/OrbitCamera.cpp
+    sources/objects/ModelObject.hpp
+    sources/objects/ModelObject.cpp
+    sources/objects/TestSatelite.cpp
+    sources/objects/TestSatelite.hpp
 
     sources/components/Transform.hpp
     sources/components/Transform.cpp
+    sources/components/Camera.hpp
+    sources/components/Camera.cpp
     sources/components/Renderer.hpp
     sources/components/Material.hpp
+    sources/components/Body.hpp
+    sources/components/Celestial.hpp
+    sources/components/OrbitalBody.hpp
 
     sources/systems/RendererSystem.hpp
     sources/systems/RendererSystem.cpp
+    sources/systems/PhysicsEngine.hpp
+    sources/systems/PhysicsEngine.cpp
+    sources/systems/OrbitalEngine.hpp
+    sources/systems/OrbitalEngine.cpp
+    sources/systems/Clock.hpp
+    sources/systems/Clock.cpp
 
     sources/third-party/stb_image.h
     sources/third-party/tiny_obj_loader.h
@@ -56,4 +86,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     EnTT::EnTT
     imgui::imgui
+    Jolt::Jolt
+    assimp::assimp
 )

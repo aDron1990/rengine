@@ -1,0 +1,11 @@
+Model Information:
+* title:	ROCKET
+* source:	https://sketchfab.com/3d-models/rocket-75d8f8cc8c2b4598b694edfe67e073e8
+* author:	Ret.ouchs (https://sketchfab.com/ret.ouchs)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "ROCKET" (https://sketchfab.com/3d-models/rocket-75d8f8cc8c2b4598b694edfe67e073e8) by Ret.ouchs (https://sketchfab.com/ret.ouchs) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
