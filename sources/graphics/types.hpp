@@ -11,6 +11,7 @@ using MeshID = ID;
 using TextureID = ID;
 using PipelineID = ID;
 using CubemapID = ID;
+using RenderTextureID = ID;
 
 struct Cull {
     enum class Front {

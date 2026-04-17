@@ -6,9 +6,15 @@
 #include "OglTexture.hpp"
 #include "graphics/Buffer.hpp"
 #include "graphics/VertexArray.hpp"
+#include "graphics/opengl/OglRenderTexture.hpp"
 
 #include <GL/glew.h>
 #include <cassert>
+
+OglRenderBackend::OglRenderBackend(glm::ivec2 windowSize)
+    : m_windowSize(windowSize)
+{
+}
 
 MeshID OglRenderBackend::createMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) noexcept
 {
@@ -44,23 +50,7 @@ MeshID OglRenderBackend::createMesh(const std::vector<Vertex>& vertices, const s
 
 TextureID OglRenderBackend::createTexture(const Image& image) noexcept
 {
-    OglTexture texture;
-    GLuint glTexture;
-    glGenTextures(1, &glTexture);
-    texture.texture.reset(glTexture);
-
-    glBindTexture(GL_TEXTURE_2D, texture.texture.get());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA,
-        GL_UNSIGNED_BYTE, image.data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    m_textures.emplace_back(std::move(texture));
+    m_textures.emplace_back(OglTexture { image });
     return m_textures.size() - 1;
 }
 
@@ -104,11 +94,46 @@ CubemapID OglRenderBackend::createCubemap(const std::vector<Image>& faces) noexc
     return m_cubemaps.size() - 1;
 }
 
+RenderTextureID OglRenderBackend::createRenderTexture(uint32_t width, uint32_t height) noexcept
+{
+    m_renderTextures.emplace_back(OglRenderTexture { { width, height } });
+    return m_renderTextures.size() - 1;
+}
+
+glm::ivec2 OglRenderBackend::getRenderTextureSize(RenderTextureID texture) noexcept
+{
+    assert(m_renderTextures.size() > texture);
+    return m_renderTextures[texture].getSize();
+}
+
+size_t OglRenderBackend::getGuiTexture(RenderTextureID texture) noexcept
+{
+    assert(m_renderTextures.size() > texture);
+    return (size_t)m_renderTextures[texture].getTexture();
+}
+
 void OglRenderBackend::bindTexture(TextureID texture, int slot) noexcept
 {
     assert(m_textures.size() > texture);
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, m_textures[texture].texture.get());
+    m_textures[texture].bind(slot);
+}
+
+void OglRenderBackend::bindRenderTexture(RenderTextureID texture, int slot) noexcept
+{
+    assert(m_renderTextures.size() > texture);
+    m_renderTextures[texture].bind(slot);
+}
+
+void OglRenderBackend::bindFramebuffer(RenderTextureID texture) noexcept
+{
+    assert(m_renderTextures.size() > texture);
+    m_renderTextures[texture].bindFBO();
+}
+
+void OglRenderBackend::bindDefaultFramebuffer() noexcept
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_windowSize.x, m_windowSize.y);
 }
 
 void OglRenderBackend::bindPipeline(PipelineID pipeline) noexcept
@@ -117,6 +142,11 @@ void OglRenderBackend::bindPipeline(PipelineID pipeline) noexcept
     auto& pipe = m_pipelines[pipeline];
     pipe.shader.use();
     applyState(pipe.state);
+}
+
+void OglRenderBackend::resizeDefaultFramebuffer(uint32_t width, uint32_t height) noexcept
+{
+    m_windowSize = { width, height };
 }
 
 void OglRenderBackend::drawMesh(MeshID mesh) noexcept

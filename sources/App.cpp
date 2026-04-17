@@ -13,6 +13,7 @@
 #include <Jolt/RegisterTypes.h>
 
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <entt/entity/fwd.hpp>
 #include <entt/signal/fwd.hpp>
 #include <glm/geometric.hpp>
@@ -29,11 +30,13 @@
 #include "components/Body.hpp"
 #include "components/Camera.hpp"
 #include "components/Celestial.hpp"
+#include "components/MeshRenderer.hpp"
 #include "components/OrbitalBody.hpp"
-#include "components/Renderer.hpp"
 #include "components/Transform.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/RenderBackend.hpp"
+#include "graphics/RenderLayer.hpp"
+#include "objects/FlyingCamera.hpp"
 #include "objects/ModelObject.hpp"
 #include "objects/OrbitCamera.hpp"
 #include "objects/TestSatelite.hpp"
@@ -101,7 +104,7 @@ void App::run()
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
     auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
 
-    RenderSystem renderer { m_registry };
+    RenderSystem renderer { m_registry, (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y };
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
     auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");
@@ -123,11 +126,15 @@ void App::run()
     xz.position() = { -20.0f, 0.0f, 0.0f };
     xz.addComponent(Picked { });
 
-    OrbitCamera cam { m_registry, xz.getEntity() };
+    // OrbitCamera cam { m_registry, xz.getEntity() };
+    FlyingCamera cam { m_registry, { } };
+
+    renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, cam.getEntity());
+    auto layer = renderer.addRenderLayer(200, 200, cam.getEntity());
 
     cube.addComponent(Celestial { 1000.0f });
 
-    physics.createCollider(xz.getEntity(), true);
+    physics.createCollider(cube.getEntity(), false);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -168,6 +175,10 @@ void App::run()
         ImGui::DragFloat("fov", &camera.fov, 0.1f);
         ImGui::End();
 
+        ImGui::Begin("Layers");
+        ImGui::Image(renderer.getGuiTextureFromLayer(0), { 200, 200 }, { 0, 1 }, { 1, 0 });
+        ImGui::End();
+
         ImGui::Begin("OrbitEngine");
         ImGui::DragFloat("GM", &cube.getComponent<Celestial>().GM);
         ImGui::Checkbox("Simulate", &simulateOrbital);
@@ -175,10 +186,10 @@ void App::run()
 
         auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
 
-        auto pickedView = m_registry.view<Picked, Transform, Renderer>();
+        auto pickedView = m_registry.view<Picked, Transform, MeshRenderer>();
         if (pickedView.size_hint() > 0) {
             auto entity = pickedView.front();
-            auto [transform, renderer] = m_registry.get<Transform, Renderer>(entity);
+            auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
 
             ImGui::Begin("Inspector");
 
@@ -190,6 +201,11 @@ void App::run()
 
             ImGui::SeparatorText("Renderer");
             ImGui::Checkbox("Draw AABB", &renderer.drawAABB);
+            auto l = renderer.layer;
+            ImGui::DragInt("render layer", &l);
+            if (renderer.layer != l) {
+                renderer.layer = l;
+            }
 
             if (m_registry.all_of<OrbitalBody>(entity)) {
                 auto& body = m_registry.get<OrbitalBody>(entity);
@@ -221,8 +237,7 @@ void App::run()
             physics.applyTransform(entity);
         }
 
-        glViewport(0, 0, m_windowSize.x, m_windowSize.y);
-        renderer.render(proj);
+        renderer.render();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

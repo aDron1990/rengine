@@ -53,7 +53,7 @@ add_executable(${PROJECT_NAME}
     sources/components/Transform.cpp
     sources/components/Camera.hpp
     sources/components/Camera.cpp
-    sources/components/Renderer.hpp
+    sources/components/MeshRenderer.hpp
     sources/components/Material.hpp
     sources/components/Body.hpp
     sources/components/Celestial.hpp
@@ -63,23 +63,28 @@ add_executable(${PROJECT_NAME}
     sources/graphics/types.hpp
     sources/graphics/GlHandle.hpp
     sources/graphics/Buffer.hpp
-    sources/graphics/RenderTarget.hpp
     sources/graphics/Mesh.hpp
     sources/graphics/Image.hpp
     sources/graphics/VertexArray.hpp
     sources/graphics/VertexArray.cpp
+    sources/graphics/RenderLayer.hpp
 
     sources/graphics/opengl/OglRenderBackend.hpp
     sources/graphics/opengl/OglRenderBackend.cpp
     sources/graphics/opengl/OglMesh.hpp
     sources/graphics/opengl/OglTexture.hpp
+    sources/graphics/opengl/OglTexture.cpp
     sources/graphics/opengl/OglPipeline.hpp
     sources/graphics/opengl/OglShader.hpp
     sources/graphics/opengl/OglShader.cpp
     sources/graphics/opengl/OglCubemap.hpp
+    sources/graphics/opengl/OglRenderTarget.hpp
+    sources/graphics/opengl/OglRenderTexture.hpp
+    sources/graphics/opengl/OglRenderTexture.cpp
 
     sources/third-party/stb_image.h
     sources/third-party/stb_image.c
+    sources/components/RenderTexture.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)
