@@ -7,7 +7,6 @@
 #include "components/MeshRenderer.hpp"
 #include "components/Transform.hpp"
 #include "systems/RenderSystem.hpp"
-#include "utils/types.hpp"
 #include <entt/entity/fwd.hpp>
 #include <glm/ext/matrix_projection.hpp>
 #include <glm/ext/quaternion_float.hpp>
@@ -22,13 +21,16 @@ Navball::Navball(entt::registry& registry, std::shared_ptr<Model> model, Texture
     : ModelObject(registry, model, texture, texture)
 {
     addComponent(LineRenderer { });
-    
+
     m_cameraEntity = registry.create();
     auto& transform = getComponent<Transform>();
     auto cameraPos = (transform.rotation * glm::vec3 { 0, 0, 4.0f });
 
-    registry.emplace<Camera>(m_cameraEntity, Camera { .fov = 30.0f, .front = glm::normalize(-cameraPos) });
+    registry.emplace<Camera>(m_cameraEntity, Camera { });
+    registry.get<Camera>(m_cameraEntity).fov = 30.0f;
+    registry.get<Camera>(m_cameraEntity).front = glm::normalize(-cameraPos);
     registry.emplace<Transform>(m_cameraEntity, Transform { .position = cameraPos });
+
     m_renderlayer = registry.ctx().get<std::reference_wrapper<RenderSystem>>().get().addRenderLayer(400, 400, m_cameraEntity);
     getComponent<MeshRenderer>().layer = m_renderlayer;
 }
@@ -49,7 +51,7 @@ void Navball::update() noexcept
     glm::vec3 east = glm::normalize(glm::cross(worldNorth, surfaceUp));
     glm::vec3 north = glm::cross(surfaceUp, east);
 
-    //glm::mat3 surfaceBasis = glm::mat3(east, surfaceUp, north);
+    // glm::mat3 surfaceBasis = glm::mat3(east, surfaceUp, north);
     glm::quat surfaceRotation = glm::quatLookAt(north, surfaceUp);
     glm::quat relativeRot = glm::inverse(surfaceRotation) * targetTrans.rotation;
 
@@ -58,14 +60,14 @@ void Navball::update() noexcept
     auto align_fix = glm::angleAxis(glm::half_pi<float>(), glm::vec3(0, -1, 0));
 
     transform.rotation = fix_pitch * fix_yaw * glm::inverse(relativeRot) * align_fix * -fix_pitch;
-    //transform.rotation = glm::inverse(relativeRot);
+    // transform.rotation = glm::inverse(relativeRot);
 
     auto& renderer = getComponent<LineRenderer>();
     renderer.lines.clear();
     renderer.lines = {
-        {targetTrans.position, targetTrans.position + north},
-        {targetTrans.position, targetTrans.position + east},
-        {targetTrans.position, targetTrans.position + surfaceUp},
-        {targetTrans.position, celTrans.position},
+        { targetTrans.position, targetTrans.position + north },
+        { targetTrans.position, targetTrans.position + east },
+        { targetTrans.position, targetTrans.position + surfaceUp },
+        { targetTrans.position, celTrans.position },
     };
 }
