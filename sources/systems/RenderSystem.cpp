@@ -2,6 +2,7 @@
 #include "BoundingBox.hpp"
 #include "Frustum.hpp"
 #include "components/Camera.hpp"
+#include "components/LineRenderer.hpp"
 #include "components/MeshRenderer.hpp"
 #include "components/Transform.hpp"
 #include "graphics/RenderBackend.hpp"
@@ -72,19 +73,32 @@ ImTextureID RenderSystem::getGuiTextureFromLayer(int nlayer) noexcept
 
 void RenderSystem::render() noexcept
 {
-    std::unordered_map<int, std::vector<entt::entity>> entityLayers;
-    for (auto [entity, renderer] : m_registry.view<MeshRenderer>()->each()) {
-        entityLayers[renderer.layer].emplace_back(entity);
+    {
+        std::unordered_map<int, std::vector<entt::entity>> entityLayers;
+        for (auto [entity, renderer] : m_registry.view<MeshRenderer>()->each()) {
+            entityLayers[renderer.layer].emplace_back(entity);
+        }
+
+        for (auto [layer, entities] : entityLayers) {
+            renderLayerMeshes(layer, entities);
+        }
     }
 
-    for (auto [layer, entities] : entityLayers) {
-        renderLayer(layer, entities);
+    {
+        std::unordered_map<int, std::vector<entt::entity>> entityLayers;
+        for (auto [entity, renderer] : m_registry.view<LineRenderer>()->each()) {
+            entityLayers[renderer.layer].emplace_back(entity);
+        }
+
+        for (auto [layer, entities] : entityLayers) {
+            renderLayerLines(layer, entities);
+        }
     }
 
     m_backend->bindDefaultFramebuffer();
 }
 
-void RenderSystem::renderLayer(int nlayer, const std::vector<entt::entity>& entities) noexcept
+void RenderSystem::renderLayerMeshes(int nlayer, const std::vector<entt::entity>& entities) noexcept
 {
     entt::entity cameraEntity;
     auto size = m_size;
@@ -111,6 +125,31 @@ void RenderSystem::renderLayer(int nlayer, const std::vector<entt::entity>& enti
         renderCubemap(cameraEntity, view, proj);
 
     renderMeshes(entities, cameraEntity, view, proj);
+}
+
+void RenderSystem::renderLayerLines(int nlayer, const std::vector<entt::entity>& entities) noexcept
+{
+    entt::entity cameraEntity;
+    auto size = m_size;
+
+    if (nlayer == DEFAULT_RENDER_LAYER) {
+        m_backend->bindDefaultFramebuffer();
+        cameraEntity = m_defaultLayerCamera;
+
+    } else {
+        auto& layer = m_layers[nlayer];
+        m_backend->bindFramebuffer(layer.texture);
+        cameraEntity = layer.camera;
+        size = m_backend->getRenderTextureSize(layer.texture);
+    }
+
+    auto [camera, transform] = m_registry.get<Camera, Transform>(cameraEntity);
+    auto view = camera.getView(transform.position);
+    auto proj = camera.getProj((float)size.x / size.y);
+
+    m_backend->clearDepth();
+
+    renderLines(entities, cameraEntity, view, proj);
 }
 
 void RenderSystem::renderCubemap(entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept
@@ -164,6 +203,20 @@ void RenderSystem::renderMeshes(const std::vector<entt::entity>& entities, entt:
         for (auto& mesh : meshes) {
             m_backend->drawMesh(mesh.meshID);
         }
+    }
+}
+
+void RenderSystem::renderLines(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept
+{
+    auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
+
+    m_backend->bindPipeline(m_linesPipe);
+    m_backend->setValue(m_linesPipe, "view", view);
+    m_backend->setValue(m_linesPipe, "proj", proj);
+
+    for (auto entity : entities) {
+        auto& renderer = m_registry.get<LineRenderer>(entity);
+        m_backend->drawLines(renderer.lines);
     }
 }
 

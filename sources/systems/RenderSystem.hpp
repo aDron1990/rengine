@@ -22,8 +22,10 @@ public:
     ImTextureID getGuiTextureFromLayer(int nlayer) noexcept;
 
 private:
-    void renderLayer(int nlayer, const std::vector<entt::entity>& entities) noexcept;
+    void renderLayerMeshes(int nlayer, const std::vector<entt::entity>& entities) noexcept;
+    void renderLayerLines(int nlayer, const std::vector<entt::entity>& entities) noexcept;
     void renderMeshes(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept;
+    void renderLines(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept;
     void renderCubemap(entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept;
 
 private:

@@ -87,6 +87,7 @@ add_executable(${PROJECT_NAME}
     sources/third-party/stb_image.h
     sources/third-party/stb_image.c
     sources/components/RenderTexture.hpp
+    sources/components/LineRenderer.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)

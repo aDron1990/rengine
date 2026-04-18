@@ -128,8 +128,9 @@ void App::run()
     auto whiteTexture = renderBack->createTexture(whiteImage);
     auto navballTexture = renderBack->createTexture(navballImage);
 
-    TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
+    cube.addComponent(Celestial { 1000.0f });
+    TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     Navball navball { m_registry, sphereModel, navballTexture };
 
     xz.position() = { -20.0f, 0.0f, 0.0f };
@@ -137,8 +138,6 @@ void App::run()
 
     OrbitCamera cam { m_registry, xz.getEntity() };
     renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, cam.getEntity());
-
-    cube.addComponent(Celestial { 1000.0f });
 
     physics.createCollider(cube.getEntity(), false);
 

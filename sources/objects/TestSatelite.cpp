@@ -2,6 +2,7 @@
 #include "Input.hpp"
 #include "ModelObject.hpp"
 #include "components/Celestial.hpp"
+#include "components/LineRenderer.hpp"
 #include "components/OrbitalBody.hpp"
 #include "systems/Clock.hpp"
 #include "systems/OrbitalEngine.hpp"
@@ -13,6 +14,9 @@ TestSatelite::TestSatelite(entt::registry& regisrty, std::shared_ptr<Model> mode
 {
     addComponent(OrbitalBody { { 0.0f, 0.0f, 4.0f } });
     addComponent(NavballSourceTag { });
+    addComponent(LineRenderer { });
+    auto& orbitalEngine = m_registry.ctx().get<OrbiralEngine>();
+    getComponent<LineRenderer>().lines = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
     auto& physics = m_registry.ctx().get<PhysicsEngine>();
     physics.createCollider(getEntity(), true);
 }
@@ -59,5 +63,5 @@ void TestSatelite::update() noexcept
     body.velocity += front * 1.f * delta;
 
     auto& orbitalEngine = m_registry.ctx().get<OrbiralEngine>();
-    body.orbit = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
+    getComponent<LineRenderer>().lines = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
 }

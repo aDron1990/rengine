@@ -3,9 +3,11 @@
 #include "TestSatelite.hpp"
 #include "components/Camera.hpp"
 #include "components/Celestial.hpp"
+#include "components/LineRenderer.hpp"
 #include "components/MeshRenderer.hpp"
 #include "components/Transform.hpp"
 #include "systems/RenderSystem.hpp"
+#include "utils/types.hpp"
 #include <entt/entity/fwd.hpp>
 #include <glm/ext/matrix_projection.hpp>
 #include <glm/ext/quaternion_float.hpp>
@@ -19,6 +21,8 @@
 Navball::Navball(entt::registry& registry, std::shared_ptr<Model> model, TextureID texture)
     : ModelObject(registry, model, texture, texture)
 {
+    addComponent(LineRenderer { });
+    
     m_cameraEntity = registry.create();
     auto& transform = getComponent<Transform>();
     auto cameraPos = (transform.rotation * glm::vec3 { 0, 0, 4.0f });
@@ -44,13 +48,24 @@ void Navball::update() noexcept
         worldNorth = glm::vec3(0, 0, 1);
     glm::vec3 east = glm::normalize(glm::cross(worldNorth, surfaceUp));
     glm::vec3 north = glm::cross(surfaceUp, east);
-    glm::mat3 surfaceBasis = glm::mat3(east, surfaceUp, north);
-    glm::quat surfaceRotation = glm::quat_cast(surfaceBasis);
+
+    //glm::mat3 surfaceBasis = glm::mat3(east, surfaceUp, north);
+    glm::quat surfaceRotation = glm::quatLookAt(north, surfaceUp);
     glm::quat relativeRot = glm::inverse(surfaceRotation) * targetTrans.rotation;
 
     auto fix_pitch = glm::angleAxis(glm::pi<float>(), glm::vec3(1, 0, 0));
     auto fix_yaw = glm::angleAxis(glm::pi<float>(), glm::vec3(0, 1, 0));
-    auto align_fix = glm::angleAxis(glm::half_pi<float>(), glm::vec3(1, 0, 0));
-    
+    auto align_fix = glm::angleAxis(glm::half_pi<float>(), glm::vec3(0, -1, 0));
+
     transform.rotation = fix_pitch * fix_yaw * glm::inverse(relativeRot) * align_fix * -fix_pitch;
+    //transform.rotation = glm::inverse(relativeRot);
+
+    auto& renderer = getComponent<LineRenderer>();
+    renderer.lines.clear();
+    renderer.lines = {
+        {targetTrans.position, targetTrans.position + north},
+        {targetTrans.position, targetTrans.position + east},
+        {targetTrans.position, targetTrans.position + surfaceUp},
+        {targetTrans.position, celTrans.position},
+    };
 }
