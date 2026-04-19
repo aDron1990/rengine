@@ -36,7 +36,8 @@ private:
     std::shared_ptr<RenderBackend> m_backend;
     std::vector<std::unique_ptr<RenderPass>> m_passes;
 
-    PipelineID m_mainPipe;
+    PipelineID m_shadedMeshPipe;
+    PipelineID m_meshPipe;
     PipelineID m_skyboxPipe;
     PipelineID m_transparentPipe;
     PipelineID m_linesPipe;

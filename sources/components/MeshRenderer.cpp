@@ -2,11 +2,13 @@
 #include "Camera.hpp"
 #include "Frustum.hpp"
 #include "graphics/RenderLayer.hpp"
+#include "graphics/types.hpp"
 
 #include <entt/entt.hpp>
 
-MeshPass::MeshPass(PipelineID pipeline)
-    : m_pipeline { pipeline }
+MeshPass::MeshPass(PipelineID shadedMeshPipeline, PipelineID meshPipeline)
+    : m_shadedMeshPipeline { shadedMeshPipeline }
+    , m_meshPipeline { meshPipeline }
 {
 }
 
@@ -14,19 +16,21 @@ void MeshPass::collect(const RenderContext& ctx) noexcept
 {
     auto view = ctx.registry.view<MeshRenderer>();
     for (auto [entity, renderer] : view->each()) {
-        m_layers[renderer.layer].emplace_back(entity);
+        m_layers[renderer.layer][renderer.shaded].emplace_back(entity);
     }
 }
 
 void MeshPass::render(RenderBackend& backend, const RenderContext& ctx) noexcept
 {
-    for (auto layer : m_layers) {
-        renderLayer(layer.first, layer.second, backend, ctx);
+    for (auto [layer, second] : m_layers) {
+        for (auto [shaded, entities] : second) {
+            renderLayer(layer, entities, shaded ? m_shadedMeshPipeline : m_meshPipeline, backend, ctx);
+        }
     }
     m_layers.clear();
 }
 
-void MeshPass::renderLayer(int nlayer, const std::vector<entt::entity> entities, RenderBackend& backend, RenderContext ctx) noexcept
+void MeshPass::renderLayer(int nlayer, const std::vector<entt::entity> entities, PipelineID pipeline, RenderBackend& backend, RenderContext ctx) noexcept
 {
     entt::entity cameraEntity;
     auto size = ctx.defaultLayerSize;
@@ -48,25 +52,25 @@ void MeshPass::renderLayer(int nlayer, const std::vector<entt::entity> entities,
 
     backend.clearDepth();
 
-    renderMeshes(entities, cameraEntity, backend, ctx);
+    renderMeshes(entities, cameraEntity, pipeline, backend, ctx);
 }
 
-void MeshPass::renderMeshes(const std::vector<entt::entity> entities, entt::entity cameraEntity, RenderBackend& backend, RenderContext ctx) noexcept
+void MeshPass::renderMeshes(const std::vector<entt::entity> entities, entt::entity cameraEntity, PipelineID pipeline, RenderBackend& backend, RenderContext ctx) noexcept
 {
     auto [camera, cameraTransform] = ctx.registry.get<Camera, Transform>(cameraEntity);
 
-    backend.bindPipeline(m_pipeline);
-    backend.setValue(m_pipeline, "view", ctx.view);
-    backend.setValue(m_pipeline, "proj", ctx.proj);
+    backend.bindPipeline(pipeline);
+    backend.setValue(pipeline, "view", ctx.view);
+    backend.setValue(pipeline, "proj", ctx.proj);
 
     Frustum frustum { ctx.proj * ctx.view };
 
     glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
-    backend.setValue(m_pipeline, "light.position", lightPos);
-    backend.setValue(m_pipeline, "light.ambient", glm::vec3 { 0.2f, 0.2f, 0.2f });
-    backend.setValue(m_pipeline, "light.diffuse", glm::vec3 { 0.5f, 0.5f, 0.5f });
-    backend.setValue(m_pipeline, "light.specular", glm::vec3 { 1.0f, 1.0f, 1.0f });
-    backend.setValue(m_pipeline, "viewPos", cameraTransform.position);
+    backend.setValue(pipeline, "light.position", lightPos);
+    backend.setValue(pipeline, "light.ambient", glm::vec3 { 0.2f, 0.2f, 0.2f });
+    backend.setValue(pipeline, "light.diffuse", glm::vec3 { 0.5f, 0.5f, 0.5f });
+    backend.setValue(pipeline, "light.specular", glm::vec3 { 1.0f, 1.0f, 1.0f });
+    backend.setValue(pipeline, "viewPos", cameraTransform.position);
 
     int drawed = 0;
     for (auto entity : entities) {
@@ -78,11 +82,11 @@ void MeshPass::renderMeshes(const std::vector<entt::entity> entities, entt::enti
         drawed++;
 
         auto model = transform.getMatrix();
-        backend.setValue(m_pipeline, "model", model);
-        backend.setValue(m_pipeline, "material.ambient", glm::vec3 { 0.8f, 0.8f, 0.8f });
-        backend.setValue(m_pipeline, "material.diffuse", 0);
-        backend.setValue(m_pipeline, "material.specular", 1);
-        backend.setValue(m_pipeline, "material.shininess", 32.0f);
+        backend.setValue(pipeline, "model", model);
+        backend.setValue(pipeline, "material.ambient", renderer.ambient);
+        backend.setValue(pipeline, "material.shininess", renderer.shininess);
+        backend.setValue(pipeline, "material.diffuse", 0);
+        backend.setValue(pipeline, "material.specular", 1);
 
         backend.bindTexture(renderer.texture, 0);
         backend.bindTexture(renderer.specular, 1);

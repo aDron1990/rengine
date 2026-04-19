@@ -30,13 +30,14 @@ RenderSystem::RenderSystem(entt::registry& registry, uint32_t width, uint32_t he
     m_backend.reset(new OglRenderBackend { { width, height } });
     m_registry.ctx().emplace<std::shared_ptr<RenderBackend>>(m_backend);
 
-    m_mainPipe = m_backend->createPipeline({ "resources/shaders/main_v.glsl", "resources/shaders/main_f.glsl" }, RenderState { });
+    m_shadedMeshPipe = m_backend->createPipeline({ "resources/shaders/shaded_mesh_v.glsl", "resources/shaders/shaded_mesh_f.glsl" }, RenderState { });
+    m_meshPipe = m_backend->createPipeline({ "resources/shaders/mesh_v.glsl", "resources/shaders/mesh_f.glsl" }, RenderState { });
     m_transparentPipe = m_backend->createPipeline({ "resources/shaders/transparent_v.glsl", "resources/shaders/transparent_f.glsl" }, RenderState { });
     m_skyboxPipe = m_backend->createPipeline({ "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }, RenderState { .depth = false });
     m_linesPipe = m_backend->createPipeline({ "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }, RenderState { .depth = false });
 
     addPass(std::make_unique<SkyboxPass>(m_skyboxPipe));
-    addPass(std::make_unique<MeshPass>(m_mainPipe));
+    addPass(std::make_unique<MeshPass>(m_shadedMeshPipe, m_meshPipe));
     addPass(std::make_unique<LinePass>(m_linesPipe));
 
     auto cubeImages = loadCubeImages("resources/images/space_skybox");

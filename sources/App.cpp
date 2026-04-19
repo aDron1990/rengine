@@ -16,8 +16,6 @@
 #include <cstdint>
 #include <entt/entity/fwd.hpp>
 #include <entt/signal/fwd.hpp>
-#include <filesystem>
-#include <fstream>
 #include <functional>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
@@ -50,7 +48,6 @@
 #include "systems/RenderSystem.hpp"
 
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -255,7 +252,6 @@ void App::run()
             ImGui::DragFloat3("scale", glm::value_ptr(transform.scale), 0.025f);
 
             ImGui::SeparatorText("Renderer");
-            ImGui::Checkbox("Draw AABB", &renderer.drawAABB);
             auto l = renderer.layer;
             ImGui::DragInt("render layer", &l);
             if (renderer.layer != l) {

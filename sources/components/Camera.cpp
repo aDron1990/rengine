@@ -9,5 +9,10 @@ glm::mat4 Camera::getView(const glm::vec3& position) const noexcept
 
 glm::mat4 Camera::getProj(float aspect) const noexcept
 {
-    return glm::perspective(glm::radians(fov), aspect, near, far);
+    if (type == ProjectionType::Perspective)
+        return glm::perspective(glm::radians(fov), aspect, near, far);
+
+    float halfHeight = orthoSize;
+    float halfWidth = orthoSize * aspect;
+    return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, near, far);
 }

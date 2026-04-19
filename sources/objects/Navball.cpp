@@ -27,16 +27,18 @@ Navball::Navball(entt::registry& registry, std::shared_ptr<Model> model, Texture
 
     m_cameraEntity = registry.create();
     auto& transform = getComponent<Transform>();
-    auto cameraPos = (transform.rotation * glm::vec3 { 0, 0, 4.0f });
+    auto cameraPos = (transform.rotation * glm::vec3 { 0, 0, 3.0f });
 
     registry.emplace<Camera>(m_cameraEntity, Camera { });
-    registry.get<Camera>(m_cameraEntity).fov = 30.0f;
+    registry.get<Camera>(m_cameraEntity).type = ProjectionType::Orthographic;
+    registry.get<Camera>(m_cameraEntity).orthoSize = 1.0f;
     registry.get<Camera>(m_cameraEntity).front = glm::normalize(-cameraPos);
     registry.emplace<Transform>(m_cameraEntity, Transform { .position = cameraPos });
 
     m_renderlayer = registry.ctx().get<std::reference_wrapper<RenderSystem>>().get().addRenderLayer(400, 400, m_cameraEntity);
     getComponent<MeshRenderer>().layer = m_renderlayer;
     getComponent<LineRenderer>().layer = m_renderlayer;
+    getComponent<MeshRenderer>().shaded = false;
 }
 
 void Navball::update() noexcept
@@ -55,7 +57,6 @@ void Navball::update() noexcept
     glm::vec3 east = glm::normalize(glm::cross(worldNorth, surfaceUp));
     glm::vec3 north = glm::cross(surfaceUp, east);
 
-    // glm::mat3 surfaceBasis = glm::mat3(east, surfaceUp, north);
     glm::quat surfaceRotation = glm::quatLookAt(north, surfaceUp);
     glm::quat relativeRot = glm::inverse(surfaceRotation) * targetTrans.rotation;
 
@@ -64,7 +65,6 @@ void Navball::update() noexcept
     auto align_fix = glm::angleAxis(glm::half_pi<float>(), glm::vec3(0, -1, 0));
 
     transform.rotation = fix_pitch * fix_yaw * glm::inverse(relativeRot) * align_fix * -fix_pitch;
-    // transform.rotation = glm::inverse(relativeRot);
 
     auto& renderer = m_registry.get<LineRenderer>(m_debugLines);
     renderer.lines = {
