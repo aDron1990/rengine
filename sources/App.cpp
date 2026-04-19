@@ -33,6 +33,7 @@
 #include "components/Body.hpp"
 #include "components/Camera.hpp"
 #include "components/Celestial.hpp"
+#include "components/LineRenderer.hpp"
 #include "components/MeshRenderer.hpp"
 #include "components/OrbitalBody.hpp"
 #include "components/Transform.hpp"
@@ -164,7 +165,7 @@ void App::run()
         fontSize,
         &cfg);
     io.Fonts->Build();
-    io.FontDefault = font; 
+    io.FontDefault = font;
 
     bool simulateOrbital = false;
     while (m_running) {
@@ -259,6 +260,10 @@ void App::run()
             ImGui::DragInt("render layer", &l);
             if (renderer.layer != l) {
                 renderer.layer = l;
+            }
+            if (m_registry.all_of<LineRenderer>(entity)) {
+                auto& renderer = m_registry.get<LineRenderer>(entity);
+                ImGui::Checkbox("Draw lines", &renderer.draw);
             }
 
             if (m_registry.all_of<OrbitalBody>(entity)) {

@@ -14,13 +14,20 @@ find_package(Jolt CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
-    sources/main.cpp
-    sources/Events.hpp
 
+    # etc
     sources/utils/utils.hpp
     sources/utils/types.hpp
     sources/utils/glfw.hpp
+    sources/Model.hpp
+    sources/Model.cpp
+    sources/Object.hpp
+    sources/Object.cpp
+    sources/BoundingBox.hpp
 
+    # Core & Systems
+    sources/main.cpp
+    sources/Events.hpp
     sources/App.cpp
     sources/App.hpp
     sources/Input.hpp
@@ -34,12 +41,7 @@ add_executable(${PROJECT_NAME}
     sources/systems/Clock.hpp
     sources/systems/Clock.cpp
 
-    sources/Model.hpp
-    sources/Model.cpp
-    sources/Object.hpp
-    sources/Object.cpp
-    sources/BoundingBox.hpp
-
+    # Objects/Entities
     sources/objects/Navball.cpp
     sources/objects/Navball.hpp
     sources/objects/FlyingCamera.hpp
@@ -51,16 +53,23 @@ add_executable(${PROJECT_NAME}
     sources/objects/TestSatelite.cpp
     sources/objects/TestSatelite.hpp
 
+    # Components
     sources/components/Transform.hpp
     sources/components/Transform.cpp
     sources/components/Camera.hpp
     sources/components/Camera.cpp
     sources/components/MeshRenderer.hpp
+    sources/components/MeshRenderer.cpp
     sources/components/Material.hpp
     sources/components/Body.hpp
     sources/components/Celestial.hpp
     sources/components/OrbitalBody.hpp
+    sources/components/RenderTexture.hpp
+    sources/components/LineRenderer.hpp
+    sources/components/SkyboxRenderer.hpp
+    sources/components/SkyboxRenderer.cpp
 
+    # Graphics
     sources/graphics/RenderBackend.hpp
     sources/graphics/types.hpp
     sources/graphics/GlHandle.hpp
@@ -70,7 +79,10 @@ add_executable(${PROJECT_NAME}
     sources/graphics/VertexArray.hpp
     sources/graphics/VertexArray.cpp
     sources/graphics/RenderLayer.hpp
+    sources/graphics/RenderContext.hpp
+    sources/graphics/RenderPass.hpp
 
+    # OpenGL
     sources/graphics/opengl/OglRenderBackend.hpp
     sources/graphics/opengl/OglRenderBackend.cpp
     sources/graphics/opengl/OglMesh.hpp
@@ -86,8 +98,7 @@ add_executable(${PROJECT_NAME}
 
     sources/third-party/stb_image.h
     sources/third-party/stb_image.c
-    sources/components/RenderTexture.hpp
-    sources/components/LineRenderer.hpp
+    
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE sources)

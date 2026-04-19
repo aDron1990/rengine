@@ -4,8 +4,10 @@
 #include "components/Camera.hpp"
 #include "components/LineRenderer.hpp"
 #include "components/MeshRenderer.hpp"
+#include "components/SkyboxRenderer.hpp"
 #include "components/Transform.hpp"
 #include "graphics/RenderBackend.hpp"
+#include "graphics/RenderContext.hpp"
 #include "graphics/opengl/OglRenderBackend.hpp"
 #include "utils/utils.hpp"
 
@@ -35,8 +37,12 @@ RenderSystem::RenderSystem(entt::registry& registry, uint32_t width, uint32_t he
     m_skyboxPipe = m_backend->createPipeline({ "resources/shaders/cubemap_v.glsl", "resources/shaders/cubemap_f.glsl" }, RenderState { .depth = false });
     m_linesPipe = m_backend->createPipeline({ "resources/shaders/line_v.glsl", "resources/shaders/line_f.glsl" }, RenderState { .depth = false });
 
+    addPass(std::make_unique<SkyboxPass>(m_skyboxPipe));
+    addPass(std::make_unique<MeshPass>(m_mainPipe));
+
     auto cubeImages = loadCubeImages("resources/images/space_skybox");
     m_cubemap = m_backend->createCubemap(cubeImages);
+    m_registry.emplace<SkyboxRenderer>(m_registry.create()).cubemap = m_cubemap;
 }
 
 void RenderSystem::resize(uint32_t width, uint32_t height) noexcept
@@ -71,22 +77,30 @@ ImTextureID RenderSystem::getGuiTextureFromLayer(int nlayer) noexcept
     return (ImTextureID)m_backend->getGuiTexture(m_layers[nlayer].texture);
 }
 
+void RenderSystem::addPass(std::unique_ptr<RenderPass> pass) noexcept
+{
+    m_passes.emplace_back(std::move(pass));
+}
+
 void RenderSystem::render() noexcept
 {
-    {
-        std::unordered_map<int, std::vector<entt::entity>> entityLayers;
-        for (auto [entity, renderer] : m_registry.view<MeshRenderer>()->each()) {
-            entityLayers[renderer.layer].emplace_back(entity);
-        }
+    RenderContext ctx {
+        .registry = m_registry,
+        .layers = m_layers,
+        .defaultLayerCamera = m_defaultLayerCamera,
+        .defaultLayerSize = m_size,
+    };
 
-        for (auto [layer, entities] : entityLayers) {
-            renderLayerMeshes(layer, entities);
-        }
+    for (auto& pass : m_passes) {
+        pass->collect(ctx);
+        pass->render(*m_backend, ctx);
     }
 
     {
         std::unordered_map<int, std::vector<entt::entity>> entityLayers;
         for (auto [entity, renderer] : m_registry.view<LineRenderer>()->each()) {
+            if (!renderer.draw)
+                continue;
             entityLayers[renderer.layer].emplace_back(entity);
         }
 
@@ -96,35 +110,6 @@ void RenderSystem::render() noexcept
     }
 
     m_backend->bindDefaultFramebuffer();
-}
-
-void RenderSystem::renderLayerMeshes(int nlayer, const std::vector<entt::entity>& entities) noexcept
-{
-    entt::entity cameraEntity;
-    auto size = m_size;
-
-    if (nlayer == DEFAULT_RENDER_LAYER) {
-        m_backend->bindDefaultFramebuffer();
-        cameraEntity = m_defaultLayerCamera;
-
-    } else {
-        auto& layer = m_layers[nlayer];
-        m_backend->bindFramebuffer(layer.texture);
-        cameraEntity = layer.camera;
-        size = m_backend->getRenderTextureSize(layer.texture);
-    }
-
-    auto [camera, transform] = m_registry.get<Camera, Transform>(cameraEntity);
-    auto view = camera.getView(transform.position);
-    auto proj = camera.getProj((float)size.x / size.y);
-
-    m_backend->clearColor();
-    m_backend->clearDepth();
-
-    if (nlayer == DEFAULT_RENDER_LAYER)
-        renderCubemap(cameraEntity, view, proj);
-
-    renderMeshes(entities, cameraEntity, view, proj);
 }
 
 void RenderSystem::renderLayerLines(int nlayer, const std::vector<entt::entity>& entities) noexcept
@@ -159,49 +144,6 @@ void RenderSystem::renderCubemap(entt::entity cameraEntity, const glm::mat4& vie
     m_backend->setValue(m_skyboxPipe, "view", view_);
     m_backend->setValue(m_skyboxPipe, "proj", proj);
     m_backend->drawCubemap(m_cubemap);
-}
-
-void RenderSystem::renderMeshes(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept
-{
-    auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
-
-    m_backend->bindPipeline(m_mainPipe);
-    m_backend->setValue(m_mainPipe, "view", view);
-    m_backend->setValue(m_mainPipe, "proj", proj);
-
-    Frustum frustum { proj * view };
-
-    glm::vec3 lightPos { -15.0f, 15.0f, 15.0f };
-    m_backend->setValue(m_mainPipe, "light.position", lightPos);
-    m_backend->setValue(m_mainPipe, "light.ambient", glm::vec3 { 0.2f, 0.2f, 0.2f });
-    m_backend->setValue(m_mainPipe, "light.diffuse", glm::vec3 { 0.5f, 0.5f, 0.5f });
-    m_backend->setValue(m_mainPipe, "light.specular", glm::vec3 { 1.0f, 1.0f, 1.0f });
-    m_backend->setValue(m_mainPipe, "viewPos", cameraTransform.position);
-
-    int drawed = 0;
-    for (auto entity : entities) {
-        auto [transform, renderer, bb] = m_registry.get<Transform, MeshRenderer, BoundingBox>(entity);
-
-        auto aabb = toGlobalAABB(bb, transform);
-        if (!frustum.isVisible(aabb))
-            continue;
-        drawed++;
-
-        auto model = transform.getMatrix();
-        m_backend->setValue(m_mainPipe, "model", model);
-        m_backend->setValue(m_mainPipe, "material.ambient", glm::vec3 { 0.8f, 0.8f, 0.8f });
-        m_backend->setValue(m_mainPipe, "material.diffuse", 0);
-        m_backend->setValue(m_mainPipe, "material.specular", 1);
-        m_backend->setValue(m_mainPipe, "material.shininess", 32.0f);
-
-        m_backend->bindTexture(renderer.texture, 0);
-        m_backend->bindTexture(renderer.specular, 1);
-
-        auto& meshes = renderer.model->getMeshes();
-        for (auto& mesh : meshes) {
-            m_backend->drawMesh(mesh.meshID);
-        }
-    }
 }
 
 void RenderSystem::renderLines(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept

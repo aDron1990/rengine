@@ -63,5 +63,6 @@ void TestSatelite::update() noexcept
     body.velocity += front * 1.f * delta;
 
     auto& orbitalEngine = m_registry.ctx().get<OrbiralEngine>();
-    getComponent<LineRenderer>().lines = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
+    auto& renderer = getComponent<LineRenderer>();
+    renderer.lines = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
 }

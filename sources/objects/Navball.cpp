@@ -67,7 +67,6 @@ void Navball::update() noexcept
     // transform.rotation = glm::inverse(relativeRot);
 
     auto& renderer = m_registry.get<LineRenderer>(m_debugLines);
-    renderer.lines.clear();
     renderer.lines = {
         { targetTrans.position, targetTrans.position + north },
         { targetTrans.position, targetTrans.position + east },
