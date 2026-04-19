@@ -16,7 +16,7 @@ OrbitCamera::OrbitCamera(entt::registry& registry, entt::entity target)
 void OrbitCamera::update() noexcept
 {
     auto& input = m_registry.ctx().get<Input>();
-    if (input.getButton(GLFW_MOUSE_BUTTON_MIDDLE))
+    if (input.getButton(GLFW_MOUSE_BUTTON_MIDDLE) || input.getButton(GLFW_MOUSE_BUTTON_RIGHT))
         if (auto delta = input.getCursorDelta(); delta) {
             float sensitivity = 0.3f;
             auto xoffset = delta->x * sensitivity;

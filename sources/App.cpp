@@ -49,6 +49,7 @@
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
+#include <iostream>
 
 float random(float min, float max)
 {
@@ -86,7 +87,7 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
     m_registry.ctx().emplace<Clock>();
 
     glfwSetWindowCloseCallback(m_window.get(), windowCloseCallback);
-    glfwSetFramebufferSizeCallback(m_window.get(), framebufferSizeCallback);
+    glfwSetFramebufferSizeCallback(m_window.get(), framebufferSizeCallback);    
 }
 
 void App::run()
@@ -148,6 +149,16 @@ void App::run()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    glm::vec2 scale;
+    glfwGetWindowContentScale(m_window.get(), &scale.x, &scale.y);
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(scale.x);
+    io.Fonts->Clear();
+    ImFontConfig cfg;
+    cfg.SizePixels = 24.0f;
+    io.FontDefault = io.Fonts->AddFontDefault(&cfg);
+    io.Fonts->Build();
 
     bool simulateOrbital = false;
     while (m_running) {

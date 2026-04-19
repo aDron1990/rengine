@@ -15,5 +15,6 @@ public:
 
 private:
     entt::entity m_cameraEntity;
+    entt::entity m_debugLines;
     int m_renderlayer;
 };

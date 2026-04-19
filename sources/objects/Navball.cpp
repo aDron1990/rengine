@@ -20,7 +20,10 @@
 Navball::Navball(entt::registry& registry, std::shared_ptr<Model> model, TextureID texture)
     : ModelObject(registry, model, texture, texture)
 {
-    addComponent(LineRenderer { });
+    addComponent<LineRenderer>(LineRenderer{});
+
+    m_debugLines = registry.create();
+    registry.emplace<LineRenderer>(m_debugLines);
 
     m_cameraEntity = registry.create();
     auto& transform = getComponent<Transform>();
@@ -33,6 +36,7 @@ Navball::Navball(entt::registry& registry, std::shared_ptr<Model> model, Texture
 
     m_renderlayer = registry.ctx().get<std::reference_wrapper<RenderSystem>>().get().addRenderLayer(400, 400, m_cameraEntity);
     getComponent<MeshRenderer>().layer = m_renderlayer;
+    getComponent<LineRenderer>().layer = m_renderlayer;
 }
 
 void Navball::update() noexcept
@@ -62,7 +66,7 @@ void Navball::update() noexcept
     transform.rotation = fix_pitch * fix_yaw * glm::inverse(relativeRot) * align_fix * -fix_pitch;
     // transform.rotation = glm::inverse(relativeRot);
 
-    auto& renderer = getComponent<LineRenderer>();
+    auto& renderer = m_registry.get<LineRenderer>(m_debugLines);
     renderer.lines.clear();
     renderer.lines = {
         { targetTrans.position, targetTrans.position + north },
