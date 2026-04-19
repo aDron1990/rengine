@@ -1,7 +1,5 @@
 #include "RenderSystem.hpp"
 #include "BoundingBox.hpp"
-#include "Frustum.hpp"
-#include "components/Camera.hpp"
 #include "components/LineRenderer.hpp"
 #include "components/MeshRenderer.hpp"
 #include "components/SkyboxRenderer.hpp"
@@ -9,12 +7,12 @@
 #include "graphics/RenderBackend.hpp"
 #include "graphics/RenderContext.hpp"
 #include "graphics/opengl/OglRenderBackend.hpp"
+#include "utils/types.hpp"
 #include "utils/utils.hpp"
 
 #include <cassert>
 #include <entt/entity/fwd.hpp>
 #include <imgui.h>
-#include <unordered_map>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_transform.hpp>
@@ -39,6 +37,7 @@ RenderSystem::RenderSystem(entt::registry& registry, uint32_t width, uint32_t he
 
     addPass(std::make_unique<SkyboxPass>(m_skyboxPipe));
     addPass(std::make_unique<MeshPass>(m_mainPipe));
+    addPass(std::make_unique<LinePass>(m_linesPipe));
 
     auto cubeImages = loadCubeImages("resources/images/space_skybox");
     m_cubemap = m_backend->createCubemap(cubeImages);
@@ -50,9 +49,6 @@ void RenderSystem::resize(uint32_t width, uint32_t height) noexcept
     m_backend->resizeDefaultFramebuffer(width, height);
     m_size = { width, height };
 }
-
-std::array<Line, 12> toLines(const BoundingBox& aabb, const Transform& transform) noexcept;
-std::array<Line, 12> toLinesAligned(const BoundingBox& aabb, const Transform& transform) noexcept;
 
 int RenderSystem::addRenderLayer(uint32_t width, uint32_t height, entt::entity camera) noexcept
 {
@@ -96,69 +92,7 @@ void RenderSystem::render() noexcept
         pass->render(*m_backend, ctx);
     }
 
-    {
-        std::unordered_map<int, std::vector<entt::entity>> entityLayers;
-        for (auto [entity, renderer] : m_registry.view<LineRenderer>()->each()) {
-            if (!renderer.draw)
-                continue;
-            entityLayers[renderer.layer].emplace_back(entity);
-        }
-
-        for (auto [layer, entities] : entityLayers) {
-            renderLayerLines(layer, entities);
-        }
-    }
-
     m_backend->bindDefaultFramebuffer();
-}
-
-void RenderSystem::renderLayerLines(int nlayer, const std::vector<entt::entity>& entities) noexcept
-{
-    entt::entity cameraEntity;
-    auto size = m_size;
-
-    if (nlayer == DEFAULT_RENDER_LAYER) {
-        m_backend->bindDefaultFramebuffer();
-        cameraEntity = m_defaultLayerCamera;
-
-    } else {
-        auto& layer = m_layers[nlayer];
-        m_backend->bindFramebuffer(layer.texture);
-        cameraEntity = layer.camera;
-        size = m_backend->getRenderTextureSize(layer.texture);
-    }
-
-    auto [camera, transform] = m_registry.get<Camera, Transform>(cameraEntity);
-    auto view = camera.getView(transform.position);
-    auto proj = camera.getProj((float)size.x / size.y);
-
-    renderLines(entities, cameraEntity, view, proj);
-}
-
-void RenderSystem::renderCubemap(entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept
-{
-    auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
-
-    auto view_ = glm::mat4(glm::mat3(view));
-    m_backend->bindPipeline(m_skyboxPipe);
-    m_backend->setValue(m_skyboxPipe, "view", view_);
-    m_backend->setValue(m_skyboxPipe, "proj", proj);
-    m_backend->drawCubemap(m_cubemap);
-}
-
-void RenderSystem::renderLines(const std::vector<entt::entity>& entities, entt::entity cameraEntity, const glm::mat4& view, const glm::mat4& proj) noexcept
-{
-    auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
-
-    m_backend->bindPipeline(m_linesPipe);
-    m_backend->setValue(m_linesPipe, "view", view);
-    m_backend->setValue(m_linesPipe, "proj", proj);
-
-    for (auto entity : entities) {
-        auto& renderer = m_registry.get<LineRenderer>(entity);
-        m_backend->setValue(m_linesPipe, "color", renderer.color);
-        m_backend->drawLines(renderer.lines);
-    }
 }
 
 std::array<Line, 12> toLines(const BoundingBox& aabb, const Transform& transform) noexcept

@@ -66,6 +66,7 @@ add_executable(${PROJECT_NAME}
     sources/components/OrbitalBody.hpp
     sources/components/RenderTexture.hpp
     sources/components/LineRenderer.hpp
+    sources/components/LineRenderer.cpp
     sources/components/SkyboxRenderer.hpp
     sources/components/SkyboxRenderer.cpp
 
