@@ -10,7 +10,7 @@
 
 class RenderBackend {
 public:
-    ~RenderBackend() = default;
+    virtual ~RenderBackend() = default;
     virtual MeshID createMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) noexcept = 0;
     virtual TextureID createTexture(const Image& image) noexcept = 0;
     virtual PipelineID createPipeline(const PipelineParams& params, const RenderState& state) noexcept = 0;
