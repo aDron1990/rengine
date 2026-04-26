@@ -12,6 +12,9 @@ find_package(EnTT CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(Jolt CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(vk-bootstrap CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(unofficial-vulkan-memory-allocator-hpp CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME}
 
@@ -111,4 +114,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     imgui::imgui
     Jolt::Jolt
     assimp::assimp
+    vk-bootstrap::vk-bootstrap vk-bootstrap::vk-bootstrap-compiler-warnings
+    Vulkan::Vulkan
+    unofficial::VulkanMemoryAllocator-Hpp::VulkanMemoryAllocator-Hpp
 )
