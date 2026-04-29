@@ -3,6 +3,6 @@
 #include <cmath>
 
 struct Celestial {
-    float GM = 1.0f;
-    float radius = INFINITY;
+    double GM = 1.0;
+    double radius = INFINITY;
 };

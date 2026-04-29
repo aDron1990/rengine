@@ -1,10 +1,10 @@
 #pragma once
 
 #include "utils/types.hpp"
-#include <glm/glm.hpp>
+#include <glm/ext/vector_double3.hpp>
 #include <vector>
 
 struct OrbitalBody {
-    glm::vec3 velocity { };
+    glm::dvec3 velocityKmPerSec { };
     std::vector<Line> orbit;
 };

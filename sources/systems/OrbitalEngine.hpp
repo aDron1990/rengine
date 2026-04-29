@@ -3,7 +3,7 @@
 #include "utils/types.hpp"
 #include <entt/entity/fwd.hpp>
 #include <entt/entt.hpp>
-#include <glm/ext/vector_float3.hpp>
+#include <glm/ext/vector_double3.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -13,21 +13,21 @@ public:
     void update() noexcept;
 
     struct Step {
-        glm::vec3 position;
-        glm::vec3 velocity;
+        glm::dvec3 positionKm;
+        glm::dvec3 velocityKmPerSec;
     };
-    Step orbitalStep(const glm::vec3& center, const glm::vec3& position, const glm::vec3& velocity, float GM) const noexcept;
+    Step orbitalStep(const glm::dvec3& centerKm, const glm::dvec3& positionKm, const glm::dvec3& velocityKmPerSec, double GM) const noexcept;
     std::vector<Line> calcOrbit(entt::entity object, entt::entity center) const noexcept;
     struct OrbitParams {
-        glm::vec3 center;
-        glm::vec3 ex; // major axis direction
-        glm::vec3 ey; // minor axis direction
-        float a; // semi-major axis
-        float e; // eccentricity
+        glm::dvec3 centerKm;
+        glm::dvec3 ex; // major axis direction
+        glm::dvec3 ey; // minor axis direction
+        double a; // semi-major axis, km
+        double e; // eccentricity
     };
-    OrbitParams computeOrbit(const glm::vec3& r, const glm::vec3& v, float GM) const noexcept;
+    OrbitParams computeOrbit(const glm::dvec3& rKm, const glm::dvec3& velocityKmPerSec, double GM) const noexcept;
 
 private:
     entt::registry& m_registry;
-    const float DT = 1.0f / 120.0f;
+    const double DT = 1.0 / 120.0;
 };

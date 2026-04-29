@@ -36,6 +36,7 @@
 #include "components/MeshRenderer.hpp"
 #include "components/OrbitalBody.hpp"
 #include "components/Transform.hpp"
+#include "components/WorldPosition.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/RenderBackend.hpp"
 #include "graphics/RenderLayer.hpp"
@@ -45,6 +46,7 @@
 #include "objects/TestSatelite.hpp"
 #include "systems/Clock.hpp"
 #include "systems/OrbitalEngine.hpp"
+#include "systems/OriginRebaseSystem.hpp"
 #include "systems/PhysicsEngine.hpp"
 #include "systems/RenderEngine.hpp"
 
@@ -63,7 +65,7 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
 {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #if 0 // fullscreen
     m_windowSize = { mode->width, mode->height };
     m_window = GlfwWindowPtr(glfwCreateWindow(m_windowSize.x, m_windowSize.y, windowTitle.c_str(), monitor, nullptr));
@@ -106,6 +108,7 @@ void App::run()
 
     auto& input = m_registry.ctx().get<Input>();
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
+    auto& originRebase = m_registry.ctx().emplace<OriginRebaseSystem>(m_registry);
     auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
 
     RenderEngine renderer { m_registry, (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y, m_window.get() };
@@ -133,17 +136,22 @@ void App::run()
     auto navballTexture = device.createTexture(navballImage);
 
     ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
-    cube.addComponent(Celestial { 1000.0f });
+    cube.addComponent(Celestial { 0.000001 });
+    cube.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
     TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     Navball navball { m_registry, sphereModel, navballTexture };
 
     xz.position() = { -20.0f, 0.0f, 0.0f };
+    xz.getComponent<WorldPosition>().positionKm = { -0.02, 0.0, 0.0 };
+    originRebase.update();
+    xz.getComponent<LineRenderer>().lines = orbital.calcOrbit(xz.getEntity(), m_registry.view<Celestial>().front());
     xz.addComponent(Picked { });
 
     OrbitCamera cam { m_registry, xz.getEntity() };
     renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, cam.getEntity());
 
     physics.createCollider(cube.getEntity(), false);
+    physics.createCollider(xz.getEntity(), true);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -174,6 +182,10 @@ void App::run()
         // physics.update();
         if (simulateOrbital)
             orbital.update();
+        originRebase.update();
+        for (auto entity : m_registry.view<Body, WorldPosition>()) {
+            physics.applyTransform(entity);
+        }
         cam.update();
         xz.update();
         navball.update();
@@ -238,7 +250,7 @@ void App::run()
                     auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
                     if (m_registry.all_of<OrbitalBody>(entity)) {
                         auto& body = m_registry.get<OrbitalBody>(entity);
-                        glm::vec3 dir = glm::normalize(body.velocity);
+                        glm::vec3 dir = glm::normalize(glm::vec3(body.velocityKmPerSec));
                         dir.x = -dir.x;
                         glm::vec3 indicator = navball.getIndicatorsQuat() * dir;
                         if (indicator.z < 0.0f) {
@@ -278,7 +290,7 @@ void App::run()
                     auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
                     if (m_registry.all_of<OrbitalBody>(entity)) {
                         auto& body = m_registry.get<OrbitalBody>(entity);
-                        glm::vec3 dir = glm::normalize(-body.velocity);
+                        glm::vec3 dir = glm::normalize(glm::vec3(-body.velocityKmPerSec));
                         dir.x = -dir.x;
                         glm::vec3 indicator = navball.getIndicatorsQuat() * dir;
                         if (indicator.z < 0.0f) {
@@ -318,7 +330,7 @@ void App::run()
         }
 
         ImGui::Begin("OrbitEngine");
-        ImGui::DragFloat("GM", &cube.getComponent<Celestial>().GM);
+        ImGui::DragScalar("GM", ImGuiDataType_Double, &cube.getComponent<Celestial>().GM, 0.0000001);
         ImGui::Checkbox("Simulate", &simulateOrbital);
         ImGui::End();
 
@@ -332,10 +344,20 @@ void App::run()
             ImGui::Begin("Inspector");
 
             ImGui::SeparatorText("Transform");
-            ImGui::DragFloat3("position", glm::value_ptr(transform.position), 0.025f);
+            bool localPositionChanged = ImGui::DragFloat3("position", glm::value_ptr(transform.position), 0.025f);
             ImGui::DragFloat4("rotation", glm::value_ptr(transform.rotation), 0.025f);
             transform.rotation = glm::normalize(transform.rotation);
             ImGui::DragFloat3("scale", glm::value_ptr(transform.scale), 0.025f);
+            if (m_registry.all_of<WorldPosition>(entity)) {
+                auto& worldPosition = m_registry.get<WorldPosition>(entity);
+                if (localPositionChanged) {
+                    worldPosition.positionKm = originRebase.toWorldKm(transform.position);
+                }
+                ImGui::SeparatorText("World Position");
+                if (ImGui::DragScalarN("position km", ImGuiDataType_Double, glm::value_ptr(worldPosition.positionKm), 3, 0.001)) {
+                    originRebase.syncTransform(entity);
+                }
+            }
 
             ImGui::SeparatorText("Renderer");
             auto l = renderer.layer;
@@ -352,11 +374,11 @@ void App::run()
                 auto& body = m_registry.get<OrbitalBody>(entity);
                 ImGui::SeparatorText("OrbitalBody");
                 ImGui::BeginDisabled(simulateOrbital);
-                ImGui::DragFloat3("orbital velocity vector", glm::value_ptr(body.velocity), 0.05);
+                ImGui::DragScalarN("orbital velocity km/s", ImGuiDataType_Double, glm::value_ptr(body.velocityKmPerSec), 3, 0.00005);
                 ImGui::EndDisabled();
                 ImGui::BeginDisabled(true);
-                auto vel = glm::length(body.velocity);
-                ImGui::DragFloat("orbital velocity", &vel, 0.05);
+                auto vel = glm::length(body.velocityKmPerSec);
+                ImGui::DragScalar("orbital velocity", ImGuiDataType_Double, &vel, 0.00005);
                 ImGui::EndDisabled();
             }
 

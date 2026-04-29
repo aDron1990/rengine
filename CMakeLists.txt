@@ -44,6 +44,8 @@ add_executable(${PROJECT_NAME}
     sources/systems/PhysicsEngine.cpp
     sources/systems/OrbitalEngine.hpp
     sources/systems/OrbitalEngine.cpp
+    sources/systems/OriginRebaseSystem.hpp
+    sources/systems/OriginRebaseSystem.cpp
     sources/systems/Clock.hpp
     sources/systems/Clock.cpp
 
@@ -70,7 +72,9 @@ add_executable(${PROJECT_NAME}
     sources/components/Body.hpp
     sources/components/Celestial.hpp
     sources/components/OrbitalBody.hpp
+    sources/components/OriginAnchor.hpp
     sources/components/RenderTexture.hpp
+    sources/components/WorldPosition.hpp
     sources/components/LineRenderer.hpp
     sources/components/LineRenderer.cpp
     sources/components/SkyboxRenderer.hpp

@@ -4,21 +4,20 @@
 #include "components/Celestial.hpp"
 #include "components/LineRenderer.hpp"
 #include "components/OrbitalBody.hpp"
+#include "components/OriginAnchor.hpp"
+#include "components/WorldPosition.hpp"
 #include "systems/Clock.hpp"
 #include "systems/OrbitalEngine.hpp"
-#include "systems/PhysicsEngine.hpp"
 #include <GLFW/glfw3.h>
 
 TestSatelite::TestSatelite(entt::registry& regisrty, std::shared_ptr<Model> model, TextureID texture, TextureID specular)
     : ModelObject(regisrty, model, texture, specular)
 {
-    addComponent(OrbitalBody { { 0.0f, 0.0f, 4.0f } });
+    addComponent(OrbitalBody { .velocityKmPerSec = { 0.0, 0.0, 0.004 } });
+    addComponent(WorldPosition { });
+    addComponent(OriginAnchor { });
     addComponent(NavballSourceTag { });
     addComponent(LineRenderer { });
-    auto& orbitalEngine = m_registry.ctx().get<OrbiralEngine>();
-    getComponent<LineRenderer>().lines = orbitalEngine.calcOrbit(getEntity(), m_registry.view<Celestial>().front());
-    auto& physics = m_registry.ctx().get<PhysicsEngine>();
-    physics.createCollider(getEntity(), true);
 }
 
 void TestSatelite::update() noexcept
@@ -60,7 +59,7 @@ void TestSatelite::update() noexcept
         return;
 
     auto front = (transform.rotation * glm::vec3(0, 0, -1));
-    body.velocity += front * 1.f * delta;
+    body.velocityKmPerSec += glm::dvec3(front) * 0.001 * static_cast<double>(delta);
 
     auto& orbitalEngine = m_registry.ctx().get<OrbiralEngine>();
     auto& renderer = getComponent<LineRenderer>();
