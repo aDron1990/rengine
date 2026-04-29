@@ -13,7 +13,7 @@ public:
 
     explicit OriginRebaseSystem(entt::registry& registry);
 
-    void update() noexcept;
+    [[nodiscard]] bool update() noexcept;
     void syncTransforms() noexcept;
     void syncTransform(entt::entity entity) noexcept;
 
@@ -24,7 +24,7 @@ public:
     [[nodiscard]] glm::dvec3 toWorldKm(const glm::vec3& positionMeters) const noexcept;
 
 private:
-    void rebaseAroundAnchor() noexcept;
+    [[nodiscard]] bool rebaseAroundAnchor() noexcept;
     [[nodiscard]] glm::dvec3 snappedOriginFor(const glm::dvec3& positionKm) const noexcept;
 
 private:

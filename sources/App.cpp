@@ -136,14 +136,14 @@ void App::run()
     auto navballTexture = device.createTexture(navballImage);
 
     ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
-    cube.addComponent(Celestial { 0.000001 });
+    cube.addComponent(Celestial { 0.64 });
     cube.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
     TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     Navball navball { m_registry, sphereModel, navballTexture };
 
-    xz.position() = { -20.0f, 0.0f, 0.0f };
-    xz.getComponent<WorldPosition>().positionKm = { -0.02, 0.0, 0.0 };
-    originRebase.update();
+    xz.position() = { -4000.0f, 0.0f, 0.0f };
+    xz.getComponent<WorldPosition>().positionKm = { -4.0, 0.0, 0.0 };
+    (void)originRebase.update();
     xz.getComponent<LineRenderer>().lines = orbital.calcOrbit(xz.getEntity(), m_registry.view<Celestial>().front());
     xz.addComponent(Picked { });
 
@@ -182,7 +182,13 @@ void App::run()
         // physics.update();
         if (simulateOrbital)
             orbital.update();
-        originRebase.update();
+        bool rebased = originRebase.update();
+        if (rebased) {
+            auto center = m_registry.view<Celestial>().front();
+            for (auto [entity, body, renderer] : m_registry.view<OrbitalBody, LineRenderer>().each()) {
+                renderer.lines = orbital.calcOrbit(entity, center);
+            }
+        }
         for (auto entity : m_registry.view<Body, WorldPosition>()) {
             physics.applyTransform(entity);
         }

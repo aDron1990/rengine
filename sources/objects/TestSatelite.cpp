@@ -13,7 +13,7 @@
 TestSatelite::TestSatelite(entt::registry& regisrty, std::shared_ptr<Model> model, TextureID texture, TextureID specular)
     : ModelObject(regisrty, model, texture, specular)
 {
-    addComponent(OrbitalBody { .velocityKmPerSec = { 0.0, 0.0, 0.004 } });
+    addComponent(OrbitalBody { .velocityKmPerSec = { 0.0, 0.0, 0.4 } });
     addComponent(WorldPosition { });
     addComponent(OriginAnchor { });
     addComponent(NavballSourceTag { });

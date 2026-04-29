@@ -10,10 +10,11 @@ OriginRebaseSystem::OriginRebaseSystem(entt::registry& registry)
 {
 }
 
-void OriginRebaseSystem::update() noexcept
+bool OriginRebaseSystem::update() noexcept
 {
-    rebaseAroundAnchor();
+    bool rebased = rebaseAroundAnchor();
     syncTransforms();
+    return rebased;
 }
 
 void OriginRebaseSystem::syncTransforms() noexcept
@@ -48,11 +49,11 @@ glm::dvec3 OriginRebaseSystem::toWorldKm(const glm::vec3& positionMeters) const 
     return m_originKm + glm::dvec3(positionMeters) / MetersPerKilometer;
 }
 
-void OriginRebaseSystem::rebaseAroundAnchor() noexcept
+bool OriginRebaseSystem::rebaseAroundAnchor() noexcept
 {
     auto view = m_registry.view<OriginAnchor, WorldPosition>();
     if (view.begin() == view.end())
-        return;
+        return false;
 
     auto entity = view.front();
     auto& worldPosition = m_registry.get<WorldPosition>(entity);
@@ -60,10 +61,11 @@ void OriginRebaseSystem::rebaseAroundAnchor() noexcept
     if (std::abs(localKm.x) < SimulationRadiusKm
         && std::abs(localKm.y) < SimulationRadiusKm
         && std::abs(localKm.z) < SimulationRadiusKm) {
-        return;
+        return false;
     }
 
     m_originKm = snappedOriginFor(worldPosition.positionKm);
+    return true;
 }
 
 glm::dvec3 OriginRebaseSystem::snappedOriginFor(const glm::dvec3& positionKm) const noexcept

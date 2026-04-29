@@ -39,8 +39,9 @@ TEST_CASE("origin rebase follows anchor in three kilometer steps")
     registry.emplace<WorldPosition>(anchor, WorldPosition { { 3.1, 0.0, 0.0 } });
     registry.emplace<Transform>(anchor);
 
-    origin.update();
+    bool rebased = origin.update();
 
+    CHECK(rebased);
     CHECK(origin.getOriginKm().x == doctest::Approx(3.0));
     CHECK(registry.get<Transform>(anchor).position.x == doctest::Approx(100.0f));
 }
