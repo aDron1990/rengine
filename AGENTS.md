@@ -4,6 +4,8 @@
 
 This repository contains `rengine`, a C++20 rendering/engine playground built with CMake and vcpkg.
 
+The project is a Kerbal Space Program-like game with a custom engine. Its goal is to implement the core KSP-style mechanics from scratch, expand them with far-future technologies, and keep a strong focus on performance optimization.
+
 Main areas:
 - `sources/` - application, engine, systems, components, objects, and graphics code.
 - `sources/graphics/opengl/` - OpenGL rendering backend implementation.
