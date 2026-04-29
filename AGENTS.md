@@ -20,6 +20,8 @@ Core dependencies are declared in `vcpkg.json` and include GLEW, GLFW, GLM, EnTT
 
 The project startup/build flow is documented in `README.md`. Use those commands as the source of truth.
 
+Agent note: run configuration, build, and test commands in escalated mode. The sandbox can block or stall Ninja/vcpkg process launching and file locking even when the same commands work in a normal terminal.
+
 Current build commands:
 - Configure: `cmake -S . -B build --preset=debug-clang-cl`
 - Build: `cmake --build build`
@@ -56,6 +58,7 @@ Useful project metric command from `README.md`:
 ## Testing and Validation
 
 - After code changes, run the relevant build command from `README.md` when practical.
+- Run validation commands that configure, build, or execute tests in escalated mode for this repository.
 - Write focused tests for new or changed functionality when it is reasonable to test automatically, and run those tests before finishing.
 - Tests use doctest and live under `tests/`; keep test CMake wiring in `tests/CMakeLists.txt`.
 - For rendering, asset, shader, or backend changes, also consider whether the app needs a manual run to verify visual behavior.
