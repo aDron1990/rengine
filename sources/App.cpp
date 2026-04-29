@@ -115,7 +115,7 @@ void App::run()
     m_registry.ctx().emplace<std::reference_wrapper<RenderEngine>>(renderer);
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
-    auto cubeModel = std::make_shared<Model>("resources/models/cube.obj");
+    auto celestialModel = std::make_shared<Model>("resources/models/sphere.fbx");
     auto sphereModel = std::make_shared<Model>("resources/models/sphere.fbx");
 
     auto renderBack = m_registry.ctx().get<std::shared_ptr<RenderBackend>>();
@@ -123,7 +123,7 @@ void App::run()
     for (auto& mesh : xzModel->getMeshes()) {
         mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
     }
-    for (auto& mesh : cubeModel->getMeshes()) {
+    for (auto& mesh : celestialModel->getMeshes()) {
         mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
     }
     for (auto& mesh : sphereModel->getMeshes()) {
@@ -135,9 +135,10 @@ void App::run()
     auto whiteTexture = device.createTexture(whiteImage);
     auto navballTexture = device.createTexture(navballImage);
 
-    ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
-    cube.addComponent(Celestial { 0.64 });
-    cube.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
+    ModelObject celestial { m_registry, celestialModel, whiteTexture, whiteTexture };
+    celestial.scale() = { 500.0f, 500.0f, 500.0f };
+    celestial.addComponent(Celestial { 0.64 });
+    celestial.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
     TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
     Navball navball { m_registry, sphereModel, navballTexture };
 
@@ -150,7 +151,7 @@ void App::run()
     OrbitCamera cam { m_registry, xz.getEntity() };
     renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, cam.getEntity());
 
-    physics.createCollider(cube.getEntity(), false);
+    physics.createCollider(celestial.getEntity(), false);
     physics.createCollider(xz.getEntity(), true);
 
     IMGUI_CHECKVERSION();
@@ -336,7 +337,7 @@ void App::run()
         }
 
         ImGui::Begin("OrbitEngine");
-        ImGui::DragScalar("GM", ImGuiDataType_Double, &cube.getComponent<Celestial>().GM, 0.0000001);
+        ImGui::DragScalar("GM", ImGuiDataType_Double, &celestial.getComponent<Celestial>().GM, 0.0000001);
         ImGui::Checkbox("Simulate", &simulateOrbital);
         ImGui::End();
 
