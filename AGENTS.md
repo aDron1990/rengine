@@ -12,7 +12,7 @@ Main areas:
 - `sources/graphics/vulkan/` - Vulkan rendering backend work.
 - `sources/third-party/` - vendored third-party source files such as stb.
 - `resources/` - shaders, models, images, fonts, and skybox assets used by the app.
-- `documents/` - project notes for agents; see `documents/render-backend.md` before changing render backend interfaces.
+- `documents/` - project notes for agents; document touched code areas here and link relevant notes from this file. See `documents/render-backend.md` before changing render backend interfaces.
 
 Core dependencies are declared in `vcpkg.json` and include GLEW, GLFW, GLM, EnTT, ImGui, Jolt, Assimp, doctest, Vulkan, Vulkan Memory Allocator, and vk-bootstrap.
 
@@ -34,6 +34,7 @@ Useful project metric command from `README.md`:
 - Do not refactor unrelated code.
 - Do not change public APIs unless the task explicitly requires it.
 - Preserve user changes already present in the working tree.
+- When a task touches a meaningful code area, document the affected design, behavior, or workflow under `documents/` and add or update the corresponding link in this `AGENTS.md` file.
 
 ## Formatting
 
