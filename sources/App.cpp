@@ -136,7 +136,7 @@ void App::run()
     auto navballTexture = device.createTexture(navballImage);
 
     ModelObject celestial { m_registry, celestialModel, whiteTexture, whiteTexture };
-    celestial.scale() = { 500.0f, 500.0f, 500.0f };
+    celestial.scale() = { 1000.0f, 1000.0f, 1000.0f };
     celestial.addComponent(Celestial { 0.64 });
     celestial.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
     TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
