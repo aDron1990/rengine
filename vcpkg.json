@@ -1,6 +1,7 @@
 {
   "dependencies": [
     "assimp",
+    "doctest",
     "entt",
     "glew",
     "glfw3",

@@ -14,7 +14,7 @@ Main areas:
 - `resources/` - shaders, models, images, fonts, and skybox assets used by the app.
 - `documents/` - project notes for agents; see `documents/render-backend.md` before changing render backend interfaces.
 
-Core dependencies are declared in `vcpkg.json` and include GLEW, GLFW, GLM, EnTT, ImGui, Jolt, Assimp, Vulkan, Vulkan Memory Allocator, and vk-bootstrap.
+Core dependencies are declared in `vcpkg.json` and include GLEW, GLFW, GLM, EnTT, ImGui, Jolt, Assimp, doctest, Vulkan, Vulkan Memory Allocator, and vk-bootstrap.
 
 ## Development Commands
 
@@ -55,6 +55,8 @@ Useful project metric command from `README.md`:
 ## Testing and Validation
 
 - After code changes, run the relevant build command from `README.md` when practical.
+- Write focused tests for new or changed functionality when it is reasonable to test automatically, and run those tests before finishing.
+- Tests use doctest and live under `tests/`; keep test CMake wiring in `tests/CMakeLists.txt`.
 - For rendering, asset, shader, or backend changes, also consider whether the app needs a manual run to verify visual behavior.
 - If a validation command cannot be run, explain the reason in the final response.
 

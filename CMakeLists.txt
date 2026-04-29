@@ -15,6 +15,9 @@ find_package(assimp CONFIG REQUIRED)
 find_package(vk-bootstrap CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(unofficial-vulkan-memory-allocator-hpp CONFIG REQUIRED)
+find_package(doctest CONFIG REQUIRED)
+
+include(CTest)
 
 add_executable(${PROJECT_NAME}
 
@@ -122,3 +125,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Vulkan::Vulkan
     unofficial::VulkanMemoryAllocator-Hpp::VulkanMemoryAllocator-Hpp
 )
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
