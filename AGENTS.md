@@ -36,6 +36,7 @@ Useful project metric command from `README.md`:
 - Do not refactor unrelated code.
 - Do not change public APIs unless the task explicitly requires it.
 - Preserve user changes already present in the working tree.
+- Commit completed task results unless the task explicitly says not to, or the task is still being shaped or resolved through discussion.
 - When a task touches a meaningful code area, document the affected design, behavior, or workflow under `documents/` and add or update the corresponding link in this `AGENTS.md` file.
 
 ## Formatting
