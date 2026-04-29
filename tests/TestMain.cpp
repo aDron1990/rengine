@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
+#include "Scene.hpp"
 #include "components/OriginAnchor.hpp"
 #include "components/Transform.hpp"
 #include "components/WorldPosition.hpp"
@@ -8,9 +9,40 @@
 
 #include <entt/entt.hpp>
 
+class TestObject : public Object {
+public:
+    explicit TestObject(entt::registry& registry)
+        : Object { registry }
+    {
+    }
+
+    void update() override { ++updates; }
+
+    int updates = 0;
+};
+
 TEST_CASE("doctest test runner is wired")
 {
     CHECK(1 + 1 == 2);
+}
+
+TEST_CASE("scene owns registry and updates created objects")
+{
+    Scene scene;
+
+    auto entity = scene.createEntity();
+    scene.registry().emplace<WorldPosition>(entity, WorldPosition { { 1.0, 2.0, 3.0 } });
+
+    auto& first = scene.createObject<TestObject>();
+    auto& second = scene.createObject<TestObject>();
+
+    scene.update();
+    scene.update();
+
+    CHECK(scene.registry().valid(entity));
+    CHECK(first.hasComponent<Transform>());
+    CHECK(first.updates == 2);
+    CHECK(second.updates == 2);
 }
 
 TEST_CASE("origin rebase converts world kilometers to local meters")

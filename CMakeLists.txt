@@ -29,6 +29,8 @@ add_executable(${PROJECT_NAME}
     sources/Model.cpp
     sources/Object.hpp
     sources/Object.cpp
+    sources/Scene.hpp
+    sources/Scene.cpp
     sources/BoundingBox.hpp
 
     # Core & Systems

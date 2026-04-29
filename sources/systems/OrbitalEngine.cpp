@@ -19,8 +19,9 @@ void OrbiralEngine::update() noexcept
     auto& originRebase = m_registry.ctx().get<OriginRebaseSystem>();
 
     auto celView = m_registry.view<Celestial, WorldPosition>();
-    auto [celestial, celPosition] = m_registry.get<Celestial, WorldPosition>(celView.front());
-    for (auto [entity, body, worldPosition] : m_registry.view<OrbitalBody, WorldPosition>().each()) {
+    auto& celestial = m_registry.get<Celestial>(celView.front());
+    auto& celPosition = m_registry.get<WorldPosition>(celView.front());
+    for (auto&& [entity, body, worldPosition] : m_registry.view<OrbitalBody, WorldPosition>().each()) {
         auto step = orbitalStep(celPosition.positionKm, worldPosition.positionKm, body.velocityKmPerSec, celestial.GM);
         worldPosition.positionKm = step.positionKm;
         body.velocityKmPerSec = step.velocityKmPerSec;
@@ -53,8 +54,10 @@ std::vector<Line> OrbiralEngine::calcOrbit(entt::entity object, entt::entity cen
     std::vector<Line> result;
     result.reserve(256);
 
-    auto [objBody, objPosition] = m_registry.get<OrbitalBody, WorldPosition>(object);
-    auto [celBody, celPosition] = m_registry.get<Celestial, WorldPosition>(center);
+    auto& objBody = m_registry.get<OrbitalBody>(object);
+    auto& objPosition = m_registry.get<WorldPosition>(object);
+    auto& celBody = m_registry.get<Celestial>(center);
+    auto& celPosition = m_registry.get<WorldPosition>(center);
     auto& originRebase = m_registry.ctx().get<OriginRebaseSystem>();
 
     OrbitParams orb = computeOrbit(

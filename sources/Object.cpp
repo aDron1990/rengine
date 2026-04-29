@@ -9,3 +9,10 @@ Object::Object(entt::registry& registry)
 {
     m_registry.emplace<Transform>(m_entity);
 }
+
+Object::~Object()
+{
+    if (m_registry.valid(m_entity)) {
+        m_registry.destroy(m_entity);
+    }
+}

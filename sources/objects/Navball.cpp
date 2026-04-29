@@ -48,7 +48,6 @@ void Navball::update() noexcept
     auto& targetTrans = m_registry.get<Transform>(target);
     auto celEntity = m_registry.view<Celestial>().front();
     auto& celTrans = m_registry.get<Transform>(celEntity);
-    auto [camera, camTrans] = m_registry.get<Camera, Transform>(m_cameraEntity);
 
     glm::vec3 surfaceUp = glm::normalize(targetTrans.position - celTrans.position);
     glm::vec3 worldNorth = glm::vec3(0, 1, 0);

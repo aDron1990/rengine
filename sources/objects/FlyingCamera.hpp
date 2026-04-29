@@ -7,7 +7,7 @@
 class FlyingCamera : public Object {
 public:
     FlyingCamera(entt::registry& registry, glm::vec3 position);
-    void update();
+    void update() override;
 
     enum class Direction { Front,
         Back,

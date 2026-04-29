@@ -6,7 +6,7 @@
 class OrbitCamera : public Object {
 public:
     OrbitCamera(entt::registry& registry, entt::entity target);
-    void update() noexcept;
+    void update() noexcept override;
     void rotate(float yaw, float pitch) noexcept;
 
 private:

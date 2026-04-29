@@ -52,7 +52,7 @@ void OrbitCamera::update() noexcept
 
 void OrbitCamera::rotate(float yaw, float pitch) noexcept
 {
-    auto [camera, transform] = m_registry.get<Camera, Transform>(m_entity);
+    auto& camera = getComponent<Camera>();
     if (pitch > 89.0f)
         pitch = 89.0f;
     if (pitch < -89.0f)

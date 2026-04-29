@@ -49,7 +49,7 @@ void PhysicsEngine::update() noexcept
 {
     m_world.Update(m_registry.ctx().get<Clock>().getDelta(), 1, &m_tempAllocator, &m_jobSystem);
     auto view = m_registry.view<Body, Transform>();
-    for (auto [entity, body, transform] : view.each()) {
+    for (auto&& [entity, body, transform] : view.each()) {
         JPH::RVec3 position;
         JPH::Quat rotation;
         auto& ibody = m_world.GetBodyInterface();
@@ -64,8 +64,8 @@ void PhysicsEngine::createCollider(entt::entity entity, bool dynamic)
     if (!m_registry.all_of<BoundingBox, Transform>(entity))
         return;
 
-    auto [bb_, transform] = m_registry.get<BoundingBox, Transform>(entity);
-    auto bb = bb_;
+    auto bb = m_registry.get<BoundingBox>(entity);
+    auto& transform = m_registry.get<Transform>(entity);
     auto model = glm::mat4 { 1.0f };
     model = glm::scale(model, transform.scale);
 
@@ -113,7 +113,8 @@ void PhysicsEngine::applyTransform(entt::entity entity) noexcept
     if (!m_registry.all_of<Body, Transform>(entity))
         return;
 
-    auto [body, transform] = m_registry.get<Body, Transform>(entity);
+    auto& body = m_registry.get<Body>(entity);
+    auto& transform = m_registry.get<Transform>(entity);
     JPH::RVec3 position = { transform.position.x, transform.position.y, transform.position.z };
     JPH::RVec3 rotation = { glm::radians(transform.rotation.x), glm::radians(transform.rotation.y), glm::radians(transform.rotation.z) };
     auto quat = JPH::Quat::sEulerAngles(rotation);

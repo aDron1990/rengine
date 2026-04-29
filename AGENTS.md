@@ -12,7 +12,7 @@ Main areas:
 - `sources/graphics/vulkan/` - Vulkan rendering backend work.
 - `sources/third-party/` - vendored third-party source files such as stb.
 - `resources/` - shaders, models, images, fonts, and skybox assets used by the app.
-- `documents/` - project notes for agents; document touched code areas here and link relevant notes from this file. See `documents/render-backend.md` before changing render backend interfaces. See `documents/origin-rebasing.md` before changing large-world/orbit position synchronization. See `documents/orbit-camera.md` before changing orbit camera controls.
+- `documents/` - project notes for agents; document touched code areas here and link relevant notes from this file. See `documents/scene.md` before changing scene ownership or object update flow. See `documents/render-backend.md` before changing render backend interfaces. See `documents/origin-rebasing.md` before changing large-world/orbit position synchronization. See `documents/orbit-camera.md` before changing orbit camera controls.
 
 Core dependencies are declared in `vcpkg.json` and include GLEW, GLFW, GLM, EnTT, ImGui, Jolt, Assimp, doctest, Vulkan, Vulkan Memory Allocator, and vk-bootstrap.
 

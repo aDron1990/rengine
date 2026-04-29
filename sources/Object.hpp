@@ -5,7 +5,9 @@
 class Object {
 public:
     Object(entt::registry& registry);
-    virtual ~Object() { m_registry.destroy(m_entity); };
+    virtual ~Object();
+
+    virtual void update() { }
 
     template <typename T>
     void addComponent(const T& component) noexcept

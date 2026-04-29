@@ -1,5 +1,7 @@
 add_executable(rengine_tests
     TestMain.cpp
+    ../sources/Object.cpp
+    ../sources/Scene.cpp
     ../sources/systems/OriginRebaseSystem.cpp
     ../sources/components/Transform.cpp
 )

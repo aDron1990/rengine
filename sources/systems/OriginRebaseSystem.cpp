@@ -19,7 +19,7 @@ bool OriginRebaseSystem::update() noexcept
 
 void OriginRebaseSystem::syncTransforms() noexcept
 {
-    for (auto [entity, worldPosition, transform] : m_registry.view<WorldPosition, Transform>().each()) {
+    for (auto&& [entity, worldPosition, transform] : m_registry.view<WorldPosition, Transform>().each()) {
         transform.position = toLocalMeters(worldPosition.positionKm);
     }
 }
@@ -29,7 +29,8 @@ void OriginRebaseSystem::syncTransform(entt::entity entity) noexcept
     if (!m_registry.all_of<WorldPosition, Transform>(entity))
         return;
 
-    auto [worldPosition, transform] = m_registry.get<WorldPosition, Transform>(entity);
+    auto& worldPosition = m_registry.get<WorldPosition>(entity);
+    auto& transform = m_registry.get<Transform>(entity);
     transform.position = toLocalMeters(worldPosition.positionKm);
 }
 

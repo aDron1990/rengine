@@ -15,7 +15,6 @@ FlyingCamera::FlyingCamera(entt::registry& registry, glm::vec3 position)
 void FlyingCamera::update()
 {
     auto& input = m_registry.ctx().get<Input>();
-    auto [camera, transform] = m_registry.get<Camera, Transform>(m_entity);
 
     if (input.getKey(GLFW_KEY_W))
         move(Direction::Front);
@@ -46,7 +45,8 @@ void FlyingCamera::update()
 void FlyingCamera::move(Direction dir) noexcept
 {
     auto delta = m_registry.ctx().get<Clock>().getDelta();
-    auto [camera, transform] = m_registry.get<Camera, Transform>(m_entity);
+    auto& camera = getComponent<Camera>();
+    auto& transform = getComponent<Transform>();
     switch (dir) {
     case Direction::Front:
         transform.position += glm::normalize(glm::vec3 { camera.front.x, 0.0f, camera.front.z }) * SPEED * delta;
@@ -71,7 +71,7 @@ void FlyingCamera::move(Direction dir) noexcept
 
 void FlyingCamera::rotate(float yaw, float pitch) noexcept
 {
-    auto [camera, transform] = m_registry.get<Camera, Transform>(m_entity);
+    auto& camera = getComponent<Camera>();
     if (pitch > 89.0f)
         pitch = 89.0f;
     if (pitch < -89.0f)

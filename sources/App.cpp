@@ -60,7 +60,7 @@ float random(float min, float max)
 }
 
 App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
-    : m_registry { }
+    : m_scene { }
     , m_windowSize { windowWidth, windowHeight }
 {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -86,9 +86,9 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
     }
 #endif
 
-    auto& input = m_registry.ctx().emplace<Input>();
+    auto& input = registry().ctx().emplace<Input>();
     input.setGlfwWindow(m_window.get());
-    m_registry.ctx().emplace<Clock>();
+    registry().ctx().emplace<Clock>();
 
     glfwSetWindowCloseCallback(m_window.get(), windowCloseCallback);
     glfwSetFramebufferSizeCallback(m_window.get(), framebufferSizeCallback);
@@ -106,19 +106,19 @@ void App::run()
         (int)std::thread::hardware_concurrency()
     };
 
-    auto& input = m_registry.ctx().get<Input>();
-    auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
-    auto& originRebase = m_registry.ctx().emplace<OriginRebaseSystem>(m_registry);
-    auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
+    auto& input = registry().ctx().get<Input>();
+    auto& physics = registry().ctx().emplace<PhysicsEngine>(registry(), tempAllocator, jobSystem);
+    auto& originRebase = registry().ctx().emplace<OriginRebaseSystem>(registry());
+    auto& orbital = registry().ctx().emplace<OrbiralEngine>(registry());
 
-    RenderEngine renderer { m_registry, (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y, m_window.get() };
-    m_registry.ctx().emplace<std::reference_wrapper<RenderEngine>>(renderer);
+    RenderEngine renderer { registry(), (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y, m_window.get() };
+    registry().ctx().emplace<std::reference_wrapper<RenderEngine>>(renderer);
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
     auto celestialModel = std::make_shared<Model>("resources/models/sphere.fbx");
     auto sphereModel = std::make_shared<Model>("resources/models/sphere.fbx");
 
-    auto renderBack = m_registry.ctx().get<std::shared_ptr<RenderBackend>>();
+    auto renderBack = registry().ctx().get<std::shared_ptr<RenderBackend>>();
     auto& device = renderBack->getDevice();
     for (auto& mesh : xzModel->getMeshes()) {
         mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
@@ -135,21 +135,22 @@ void App::run()
     auto whiteTexture = device.createTexture(whiteImage);
     auto navballTexture = device.createTexture(navballImage);
 
-    ModelObject celestial { m_registry, celestialModel, whiteTexture, whiteTexture };
+    auto& celestial = m_scene.createObject<ModelObject>(celestialModel, whiteTexture, whiteTexture);
     celestial.scale() = { 1000.0f, 1000.0f, 1000.0f };
     celestial.addComponent(Celestial { 0.64 });
     celestial.addComponent(WorldPosition { { 0.0, 0.0, 0.0 } });
-    TestSatelite xz { m_registry, xzModel, whiteTexture, whiteTexture };
-    Navball navball { m_registry, sphereModel, navballTexture };
+    auto& xz = m_scene.createObject<TestSatelite>(xzModel, whiteTexture, whiteTexture);
 
     xz.position() = { -4000.0f, 0.0f, 0.0f };
     xz.getComponent<WorldPosition>().positionKm = { -4.0, 0.0, 0.0 };
     (void)originRebase.update();
-    xz.getComponent<LineRenderer>().lines = orbital.calcOrbit(xz.getEntity(), m_registry.view<Celestial>().front());
+    xz.getComponent<LineRenderer>().lines = orbital.calcOrbit(xz.getEntity(), registry().view<Celestial>().front());
     xz.addComponent(Picked { });
 
-    OrbitCamera cam { m_registry, xz.getEntity() };
-    renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, cam.getEntity());
+    auto& cam = m_scene.createObject<OrbitCamera>(xz.getEntity());
+    auto mainCameraEntity = cam.getEntity();
+    auto& navball = m_scene.createObject<Navball>(sphereModel, navballTexture);
+    renderer.setRenderLayerCamera(DEFAULT_RENDER_LAYER, mainCameraEntity);
 
     physics.createCollider(celestial.getEntity(), false);
     physics.createCollider(xz.getEntity(), true);
@@ -179,29 +180,28 @@ void App::run()
     bool simulateOrbital = false;
     while (m_running) {
         updateWindow();
-        m_registry.ctx().get<Clock>().update();
+        registry().ctx().get<Clock>().update();
         // physics.update();
         if (simulateOrbital)
             orbital.update();
         bool rebased = originRebase.update();
         if (rebased) {
-            auto center = m_registry.view<Celestial>().front();
-            for (auto [entity, body, renderer] : m_registry.view<OrbitalBody, LineRenderer>().each()) {
+            auto center = registry().view<Celestial>().front();
+            for (auto&& [entity, body, renderer] : registry().view<OrbitalBody, LineRenderer>().each()) {
                 renderer.lines = orbital.calcOrbit(entity, center);
             }
         }
-        for (auto entity : m_registry.view<Body, WorldPosition>()) {
+        for (auto entity : registry().view<Body, WorldPosition>()) {
             physics.applyTransform(entity);
         }
-        cam.update();
-        xz.update();
-        navball.update();
+        m_scene.update();
 
-        auto cameraEntity = m_registry.view<Camera, Transform>().front();
-        auto [camera, cameraTransform] = m_registry.get<Camera, Transform>(cameraEntity);
+        auto cameraEntity = mainCameraEntity;
+        auto& camera = registry().get<Camera>(cameraEntity);
+        auto& cameraTransform = registry().get<Transform>(cameraEntity);
         auto view = camera.getView(cameraTransform.position);
 
-        processInput(view, cameraTransform.position);
+        processInput(cameraEntity, view, cameraTransform.position);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -250,13 +250,12 @@ void App::run()
                 ImVec2(center.x, center.y + ylen),
                 color, 1.5f);
 
-            auto piView = m_registry.view<Picked, Transform, MeshRenderer>();
+            auto piView = registry().view<Picked, Transform, MeshRenderer>();
             if (piView.size_hint() > 0) {
                 {
                     auto entity = piView.front();
-                    auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
-                    if (m_registry.all_of<OrbitalBody>(entity)) {
-                        auto& body = m_registry.get<OrbitalBody>(entity);
+                    if (registry().all_of<OrbitalBody>(entity)) {
+                        auto& body = registry().get<OrbitalBody>(entity);
                         glm::vec3 dir = glm::normalize(glm::vec3(body.velocityKmPerSec));
                         dir.x = -dir.x;
                         glm::vec3 indicator = navball.getIndicatorsQuat() * dir;
@@ -294,9 +293,8 @@ void App::run()
                 }
                 {
                     auto entity = piView.front();
-                    auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
-                    if (m_registry.all_of<OrbitalBody>(entity)) {
-                        auto& body = m_registry.get<OrbitalBody>(entity);
+                    if (registry().all_of<OrbitalBody>(entity)) {
+                        auto& body = registry().get<OrbitalBody>(entity);
                         glm::vec3 dir = glm::normalize(glm::vec3(-body.velocityKmPerSec));
                         dir.x = -dir.x;
                         glm::vec3 indicator = navball.getIndicatorsQuat() * dir;
@@ -343,10 +341,11 @@ void App::run()
 
         auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
 
-        auto pickedView = m_registry.view<Picked, Transform, MeshRenderer>();
+        auto pickedView = registry().view<Picked, Transform, MeshRenderer>();
         if (pickedView.size_hint() > 0) {
             auto entity = pickedView.front();
-            auto [transform, renderer] = m_registry.get<Transform, MeshRenderer>(entity);
+            auto& transform = registry().get<Transform>(entity);
+            auto& renderer = registry().get<MeshRenderer>(entity);
 
             ImGui::Begin("Inspector");
 
@@ -355,8 +354,8 @@ void App::run()
             ImGui::DragFloat4("rotation", glm::value_ptr(transform.rotation), 0.025f);
             transform.rotation = glm::normalize(transform.rotation);
             ImGui::DragFloat3("scale", glm::value_ptr(transform.scale), 0.025f);
-            if (m_registry.all_of<WorldPosition>(entity)) {
-                auto& worldPosition = m_registry.get<WorldPosition>(entity);
+            if (registry().all_of<WorldPosition>(entity)) {
+                auto& worldPosition = registry().get<WorldPosition>(entity);
                 if (localPositionChanged) {
                     worldPosition.positionKm = originRebase.toWorldKm(transform.position);
                 }
@@ -372,19 +371,19 @@ void App::run()
             if (renderer.layer != l) {
                 renderer.layer = l;
             }
-            if (m_registry.all_of<LineRenderer>(entity)) {
-                auto& renderer = m_registry.get<LineRenderer>(entity);
+            if (registry().all_of<LineRenderer>(entity)) {
+                auto& renderer = registry().get<LineRenderer>(entity);
                 ImGui::Checkbox("Draw lines", &renderer.draw);
             }
 
-            if (m_registry.all_of<OrbitalBody>(entity)) {
-                auto& body = m_registry.get<OrbitalBody>(entity);
+            if (registry().all_of<OrbitalBody>(entity)) {
+                auto& body = registry().get<OrbitalBody>(entity);
                 ImGui::SeparatorText("OrbitalBody");
                 ImGui::BeginDisabled(simulateOrbital);
                 if (ImGui::DragScalarN("orbital velocity km/s", ImGuiDataType_Double, glm::value_ptr(body.velocityKmPerSec), 3, 0.00005)) {
-                    if (m_registry.all_of<LineRenderer>(entity)) {
-                        auto center = m_registry.view<Celestial>().front();
-                        auto& lineRenderer = m_registry.get<LineRenderer>(entity);
+                    if (registry().all_of<LineRenderer>(entity)) {
+                        auto center = registry().view<Celestial>().front();
+                        auto& lineRenderer = registry().get<LineRenderer>(entity);
                         lineRenderer.lines = orbital.calcOrbit(entity, center);
                     }
                 }
@@ -395,7 +394,7 @@ void App::run()
                 ImGui::EndDisabled();
             }
 
-            if (m_registry.all_of<Body>(entity)) {
+            if (registry().all_of<Body>(entity)) {
                 ImGui::SeparatorText("Body");
                 auto velocity = physics.getVelocity(entity);
                 ImGui::BeginDisabled(true);
@@ -431,9 +430,9 @@ void App::updateWindow() noexcept { glfwPollEvents(); }
 
 void App::close() noexcept { m_running = false; }
 
-void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) noexcept
+void App::processInput(entt::entity cameraEntity, const glm::mat4& viewMatrix, const glm::vec3& cameraPos) noexcept
 {
-    auto& input = m_registry.ctx().get<Input>();
+    auto& input = registry().ctx().get<Input>();
     if (input.getKey(GLFW_KEY_ESCAPE))
         close();
 
@@ -443,12 +442,12 @@ void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) 
         return;
 
     if (input.getButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
-        m_registry.clear<Picked>();
+        registry().clear<Picked>();
 
     if (!input.getButtonDown(GLFW_MOUSE_BUTTON_LEFT))
         return;
 
-    m_registry.clear<Picked>();
+    registry().clear<Picked>();
 
     auto pos = input.getCursorPosition();
     float mouseX = pos.x;
@@ -460,7 +459,7 @@ void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) 
         (2.0f * mouseX / windowWidth) - 1.0f, 1.0f - (2.0f * mouseY / windowHeight)
     };
 
-    auto& camera = m_registry.get<Camera>(m_registry.view<Camera>().front());
+    auto& camera = registry().get<Camera>(cameraEntity);
     auto proj = camera.getProj((float)m_windowSize.x / m_windowSize.y);
 
     glm::vec4 clip = { mouseNDC.x, mouseNDC.y, -1.0f, 1.0f };
@@ -470,10 +469,10 @@ void App::processInput(const glm::mat4& viewMatrix, const glm::vec3& cameraPos) 
     glm::vec3 worldDir = glm::normalize(glm::vec3(glm::inverse(viewMatrix) * eye));
 
     Ray ray { cameraPos, worldDir };
-    auto& physics = m_registry.ctx().get<PhysicsEngine>();
+    auto& physics = registry().ctx().get<PhysicsEngine>();
     auto picked = physics.pick(ray);
     if (picked)
-        m_registry.emplace_or_replace<Picked>(picked.value());
+        registry().emplace_or_replace<Picked>(picked.value());
 }
 
 void App::windowCloseCallback(GLFWwindow* window) noexcept
@@ -490,5 +489,5 @@ void App::framebufferSizeCallback(GLFWwindow* window, int width, int height) noe
     auto& app = *static_cast<App*>(glfwGetWindowUserPointer(window));
     app.m_windowSize = { width, height };
     app.m_dispatcher.trigger<Event::WindowResize>({ { app.m_windowSize } });
-    app.m_registry.ctx().get<std::reference_wrapper<RenderEngine>>().get().resize(width, height);
+    app.registry().ctx().get<std::reference_wrapper<RenderEngine>>().get().resize(width, height);
 }
