@@ -1,6 +1,6 @@
 # Build
 ```bash
-cmake -S . -B build --preset=debug
+cmake -S . -B build --preset=debug-clang-cl
 cmake --build build
 ```
 

@@ -11,12 +11,12 @@
 #include <GL/glew.h>
 #include <cassert>
 
-OglRenderBackend::OglRenderBackend(glm::ivec2 windowSize)
+OglRenderDevice::OglRenderDevice(glm::ivec2 windowSize)
     : m_windowSize(windowSize)
 {
 }
 
-MeshID OglRenderBackend::createMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) noexcept
+MeshID OglRenderDevice::createMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) noexcept
 {
     OglMesh mesh;
     mesh.verticesCount = vertices.size();
@@ -48,13 +48,13 @@ MeshID OglRenderBackend::createMesh(const std::vector<Vertex>& vertices, const s
     return m_meshes.size() - 1;
 }
 
-TextureID OglRenderBackend::createTexture(const Image& image) noexcept
+TextureID OglRenderDevice::createTexture(const Image& image) noexcept
 {
     m_textures.emplace_back(OglTexture { image });
     return m_textures.size() - 1;
 }
 
-PipelineID OglRenderBackend::createPipeline(const PipelineParams& params, const RenderState& state) noexcept
+PipelineID OglRenderDevice::createPipeline(const PipelineParams& params, const RenderState& state) noexcept
 {
     OglShader shader { params.vertexPath, params.fragmentPath };
     OglPipeline pipeline { params, state, std::move(shader) };
@@ -62,7 +62,7 @@ PipelineID OglRenderBackend::createPipeline(const PipelineParams& params, const 
     return m_pipelines.size() - 1;
 }
 
-CubemapID OglRenderBackend::createCubemap(const std::vector<Image>& faces) noexcept
+CubemapID OglRenderDevice::createCubemap(const std::vector<Image>& faces) noexcept
 {
     OglCubemap cubemap;
 
@@ -94,69 +94,74 @@ CubemapID OglRenderBackend::createCubemap(const std::vector<Image>& faces) noexc
     return m_cubemaps.size() - 1;
 }
 
-RenderTextureID OglRenderBackend::createRenderTexture(uint32_t width, uint32_t height) noexcept
+RenderTextureID OglRenderDevice::createRenderTexture(uint32_t width, uint32_t height) noexcept
 {
     m_renderTextures.emplace_back(OglRenderTexture { { width, height } });
     return m_renderTextures.size() - 1;
 }
 
-glm::ivec2 OglRenderBackend::getRenderTextureSize(RenderTextureID texture) noexcept
+glm::ivec2 OglRenderDevice::getRenderTextureSize(RenderTextureID texture) noexcept
 {
     assert(m_renderTextures.size() > texture);
     return m_renderTextures[texture].getSize();
 }
 
-size_t OglRenderBackend::getGuiTexture(RenderTextureID texture) noexcept
+size_t OglRenderDevice::getGuiTexture(RenderTextureID texture) noexcept
 {
     assert(m_renderTextures.size() > texture);
     return (size_t)m_renderTextures[texture].getTexture();
 }
 
-void OglRenderBackend::bindTexture(TextureID texture, int slot) noexcept
-{
-    assert(m_textures.size() > texture);
-    m_textures[texture].bind(slot);
-}
-
-void OglRenderBackend::bindRenderTexture(RenderTextureID texture, int slot) noexcept
-{
-    assert(m_renderTextures.size() > texture);
-    m_renderTextures[texture].bind(slot);
-}
-
-void OglRenderBackend::bindFramebuffer(RenderTextureID texture) noexcept
-{
-    assert(m_renderTextures.size() > texture);
-    m_renderTextures[texture].bindFBO();
-}
-
-void OglRenderBackend::bindDefaultFramebuffer() noexcept
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_windowSize.x, m_windowSize.y);
-}
-
-void OglRenderBackend::bindPipeline(PipelineID pipeline) noexcept
-{
-    assert(m_pipelines.size() > pipeline);
-    auto& pipe = m_pipelines[pipeline];
-    pipe.shader.use();
-    applyState(pipe.state);
-}
-
-void OglRenderBackend::resizeDefaultFramebuffer(uint32_t width, uint32_t height) noexcept
+void OglRenderDevice::resizeDefaultFramebuffer(uint32_t width, uint32_t height) noexcept
 {
     m_windowSize = { width, height };
 }
 
-void OglRenderBackend::drawMesh(MeshID mesh) noexcept
+OglCommandBuffer::OglCommandBuffer(OglRenderDevice& device)
+    : m_device(device)
 {
-    assert(m_meshes.size() > mesh);
-    m_meshes[mesh].vao.bind();
-    glDrawElements(GL_TRIANGLES, m_meshes[mesh].indicesCount, GL_UNSIGNED_INT, nullptr);
 }
 
-void OglRenderBackend::drawLines(const std::vector<Line>& lines) noexcept
+void OglCommandBuffer::bindTexture(TextureID texture, int slot) noexcept
+{
+    assert(m_device.m_textures.size() > texture);
+    m_device.m_textures[texture].bind(slot);
+}
+
+void OglCommandBuffer::bindRenderTexture(RenderTextureID texture, int slot) noexcept
+{
+    assert(m_device.m_renderTextures.size() > texture);
+    m_device.m_renderTextures[texture].bind(slot);
+}
+
+void OglCommandBuffer::bindFramebuffer(RenderTextureID texture) noexcept
+{
+    assert(m_device.m_renderTextures.size() > texture);
+    m_device.m_renderTextures[texture].bindFBO();
+}
+
+void OglCommandBuffer::bindDefaultFramebuffer() noexcept
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, m_device.m_windowSize.x, m_device.m_windowSize.y);
+}
+
+void OglCommandBuffer::bindPipeline(PipelineID pipeline) noexcept
+{
+    assert(m_device.m_pipelines.size() > pipeline);
+    auto& pipe = m_device.m_pipelines[pipeline];
+    pipe.shader.use();
+    applyState(pipe.state);
+}
+
+void OglCommandBuffer::drawMesh(MeshID mesh) noexcept
+{
+    assert(m_device.m_meshes.size() > mesh);
+    m_device.m_meshes[mesh].vao.bind();
+    glDrawElements(GL_TRIANGLES, m_device.m_meshes[mesh].indicesCount, GL_UNSIGNED_INT, nullptr);
+}
+
+void OglCommandBuffer::drawLines(const std::vector<Line>& lines) noexcept
 {
     VertexArray vao;
     vao.bind();
@@ -169,28 +174,28 @@ void OglRenderBackend::drawLines(const std::vector<Line>& lines) noexcept
     glDrawArrays(GL_LINES, 0, lines.size() * 2);
 }
 
-void OglRenderBackend::drawCubemap(CubemapID cubemap) noexcept
+void OglCommandBuffer::drawCubemap(CubemapID cubemap) noexcept
 {
-    assert(m_cubemaps.size() > cubemap);
-    m_cubemaps[cubemap].vao.bind();
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemaps[cubemap].texture.get());
+    assert(m_device.m_cubemaps.size() > cubemap);
+    m_device.m_cubemaps[cubemap].vao.bind();
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_device.m_cubemaps[cubemap].texture.get());
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void OglRenderBackend::clearColor() noexcept
+void OglCommandBuffer::clearColor() noexcept
 {
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-void OglRenderBackend::clearDepth() noexcept
+void OglCommandBuffer::clearDepth() noexcept
 {
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-void OglRenderBackend::setValue(PipelineID pipeline, const std::string& name, Value value) noexcept
+void OglCommandBuffer::setValue(PipelineID pipeline, const std::string& name, Value value) noexcept
 {
-    auto& shader = m_pipelines[pipeline].shader;
+    auto& shader = m_device.m_pipelines[pipeline].shader;
     std::visit([&](auto&& v) {
         using T = std::decay_t<decltype(v)>;
         shader.setUniform<T>(v, name);
@@ -198,7 +203,7 @@ void OglRenderBackend::setValue(PipelineID pipeline, const std::string& name, Va
         value);
 }
 
-void OglRenderBackend::applyState(const RenderState& state) noexcept
+void OglCommandBuffer::applyState(const RenderState& state) noexcept
 {
     if (state.cull.mode == Cull::Mode::None)
         glDisable(GL_CULL_FACE);
@@ -222,4 +227,20 @@ void OglRenderBackend::applyState(const RenderState& state) noexcept
     } else {
         glDisable(GL_BLEND);
     }
+}
+
+OglRenderBackend::OglRenderBackend(glm::ivec2 windowSize)
+    : m_device(windowSize)
+    , m_commandBuffer(m_device)
+{
+}
+
+RenderDevice& OglRenderBackend::getDevice() noexcept
+{
+    return m_device;
+}
+
+CommandBuffer& OglRenderBackend::getCommandBuffer() noexcept
+{
+    return m_commandBuffer;
 }

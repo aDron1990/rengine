@@ -33,17 +33,6 @@ void LinePass::renderLayer(int nlayer, const std::vector<entt::entity> entities,
     auto cameraEntity = getLayerCamera(nlayer, backend, ctx);
     auto size = getLayerSize(nlayer, backend, ctx);
 
-    if (nlayer == DEFAULT_RENDER_LAYER) {
-        backend.bindDefaultFramebuffer();
-        cameraEntity = ctx.defaultLayerCamera;
-
-    } else {
-        auto& layer = ctx.layers[nlayer];
-        backend.bindFramebuffer(layer.texture);
-        cameraEntity = layer.camera;
-        size = backend.getRenderTextureSize(layer.texture);
-    }
-
     auto [camera, transform] = ctx.registry.get<Camera, Transform>(cameraEntity);
     ctx.view = camera.getView(transform.position);
     ctx.proj = camera.getProj((float)size.x / size.y);
@@ -53,15 +42,16 @@ void LinePass::renderLayer(int nlayer, const std::vector<entt::entity> entities,
 
 void LinePass::renderLines(const std::vector<entt::entity> entities, entt::entity cameraEntity, RenderBackend& backend, RenderContext ctx) noexcept
 {
+    auto& commandBuffer = backend.getCommandBuffer();
     auto [camera, cameraTransform] = ctx.registry.get<Camera, Transform>(cameraEntity);
 
-    backend.bindPipeline(m_pipeline);
-    backend.setValue(m_pipeline, "view", ctx.view);
-    backend.setValue(m_pipeline, "proj", ctx.proj);
+    commandBuffer.bindPipeline(m_pipeline);
+    commandBuffer.setValue(m_pipeline, "view", ctx.view);
+    commandBuffer.setValue(m_pipeline, "proj", ctx.proj);
 
     for (auto entity : entities) {
         auto& renderer = ctx.registry.get<LineRenderer>(entity);
-        backend.setValue(m_pipeline, "color", renderer.color);
-        backend.drawLines(renderer.lines);
+        commandBuffer.setValue(m_pipeline, "color", renderer.color);
+        commandBuffer.drawLines(renderer.lines);
     }
 }

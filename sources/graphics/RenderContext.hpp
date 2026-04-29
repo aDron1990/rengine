@@ -19,11 +19,12 @@ struct RenderContext {
 
 inline void bindLayer(int nlayer, RenderBackend& backend, const RenderContext& ctx) noexcept
 {
+    auto& commandBuffer = backend.getCommandBuffer();
     if (nlayer == DEFAULT_RENDER_LAYER) {
-        backend.bindDefaultFramebuffer();
+        commandBuffer.bindDefaultFramebuffer();
     } else {
         auto& layer = ctx.layers[nlayer];
-        backend.bindFramebuffer(layer.texture);
+        commandBuffer.bindFramebuffer(layer.texture);
     }
 }
 
@@ -43,6 +44,6 @@ inline glm::ivec2 getLayerSize(int nlayer, RenderBackend& backend, const RenderC
         return ctx.defaultLayerSize;
     } else {
         auto& layer = ctx.layers[nlayer];
-        return backend.getRenderTextureSize(layer.texture);
+        return backend.getDevice().getRenderTextureSize(layer.texture);
     }
 }

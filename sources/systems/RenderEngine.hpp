@@ -5,6 +5,8 @@
 #include "graphics/RenderPass.hpp"
 #include "graphics/types.hpp"
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <cstdint>
 #include <entt/entity/fwd.hpp>
 #include <entt/entt.hpp>
@@ -15,7 +17,7 @@
 
 class RenderEngine {
 public:
-    RenderEngine(entt::registry& registry, uint32_t width, uint32_t height);
+    RenderEngine(entt::registry& registry, uint32_t width, uint32_t height, GLFWwindow* window);
     void resize(uint32_t width, uint32_t height) noexcept;
     void render() noexcept;
 

@@ -63,7 +63,8 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
 {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-#if 1 // fullscreen
+    //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#if 0 // fullscreen
     m_windowSize = { mode->width, mode->height };
     m_window = GlfwWindowPtr(glfwCreateWindow(m_windowSize.x, m_windowSize.y, windowTitle.c_str(), monitor, nullptr));
 #else
@@ -75,13 +76,13 @@ App::App(int windowWidth, int windowHeight, const std::string& windowTitle)
 
     glfwSetWindowUserPointer(m_window.get(), this);
 
+#if 1
     glfwMakeContextCurrent(m_window.get());
     glewExperimental = true;
     if (glewInit() != GLEW_OK) {
         throw std::runtime_error { "Failed to init GLEW" };
     }
-
-    glEnable(GL_DEPTH_TEST);
+#endif
 
     auto& input = m_registry.ctx().emplace<Input>();
     input.setGlfwWindow(m_window.get());
@@ -107,7 +108,7 @@ void App::run()
     auto& physics = m_registry.ctx().emplace<PhysicsEngine>(m_registry, tempAllocator, jobSystem);
     auto& orbital = m_registry.ctx().emplace<OrbiralEngine>(m_registry);
 
-    RenderEngine renderer { m_registry, (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y };
+    RenderEngine renderer { m_registry, (uint32_t)m_windowSize.x, (uint32_t)m_windowSize.y, m_window.get() };
     m_registry.ctx().emplace<std::reference_wrapper<RenderEngine>>(renderer);
 
     auto xzModel = std::make_shared<Model>("resources/models/cursor.fbx");
@@ -115,20 +116,21 @@ void App::run()
     auto sphereModel = std::make_shared<Model>("resources/models/sphere.fbx");
 
     auto renderBack = m_registry.ctx().get<std::shared_ptr<RenderBackend>>();
+    auto& device = renderBack->getDevice();
     for (auto& mesh : xzModel->getMeshes()) {
-        mesh.meshID = renderBack->createMesh(mesh.vertices, mesh.indices);
+        mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
     }
     for (auto& mesh : cubeModel->getMeshes()) {
-        mesh.meshID = renderBack->createMesh(mesh.vertices, mesh.indices);
+        mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
     }
     for (auto& mesh : sphereModel->getMeshes()) {
-        mesh.meshID = renderBack->createMesh(mesh.vertices, mesh.indices);
+        mesh.meshID = device.createMesh(mesh.vertices, mesh.indices);
     }
 
     auto whiteImage = loadImage("resources/images/white.png");
     auto navballImage = loadImage("resources/images/navball_brownblue.png");
-    auto whiteTexture = renderBack->createTexture(whiteImage);
-    auto navballTexture = renderBack->createTexture(navballImage);
+    auto whiteTexture = device.createTexture(whiteImage);
+    auto navballTexture = device.createTexture(navballImage);
 
     ModelObject cube { m_registry, cubeModel, whiteTexture, whiteTexture };
     cube.addComponent(Celestial { 1000.0f });

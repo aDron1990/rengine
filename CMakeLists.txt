@@ -100,6 +100,10 @@ add_executable(${PROJECT_NAME}
     sources/graphics/opengl/OglRenderTexture.hpp
     sources/graphics/opengl/OglRenderTexture.cpp
 
+    # Vulkan
+    sources/graphics/vulkan/VulkanRenderBackend.hpp
+    sources/graphics/vulkan/VulkanRenderBackend.cpp
+
     sources/third-party/stb_image.h
     sources/third-party/stb_image.c
 )

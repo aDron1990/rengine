@@ -27,10 +27,11 @@ void SkyboxPass::render(RenderBackend& backend, const RenderContext& ctx) noexce
 
 void SkyboxPass::renderLayer(int nlayer, entt::entity entity, RenderBackend& backend, const RenderContext& ctx) noexcept
 {
+    auto& commandBuffer = backend.getCommandBuffer();
     bindLayer(nlayer, backend, ctx);
 
-    backend.clearDepth();
-    backend.clearColor();
+    commandBuffer.clearDepth();
+    commandBuffer.clearColor();
 
     auto cameraEntity = getLayerCamera(nlayer, backend, ctx);
     auto size = getLayerSize(nlayer, backend, ctx);
@@ -40,8 +41,8 @@ void SkyboxPass::renderLayer(int nlayer, entt::entity entity, RenderBackend& bac
     auto proj = camera.getProj((float)size.x / size.y);
     auto view_ = glm::mat4(glm::mat3(view));
 
-    backend.bindPipeline(m_pipeline);
-    backend.setValue(m_pipeline, "view", view_);
-    backend.setValue(m_pipeline, "proj", proj);
-    backend.drawCubemap(ctx.registry.get<SkyboxRenderer>(entity).cubemap);
+    commandBuffer.bindPipeline(m_pipeline);
+    commandBuffer.setValue(m_pipeline, "view", view_);
+    commandBuffer.setValue(m_pipeline, "proj", proj);
+    commandBuffer.drawCubemap(ctx.registry.get<SkyboxRenderer>(entity).cubemap);
 }

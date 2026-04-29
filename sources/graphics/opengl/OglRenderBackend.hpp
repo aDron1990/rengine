@@ -9,12 +9,11 @@
 #include "graphics/types.hpp"
 #include "utils/types.hpp"
 #include <cstdint>
-#include <optional>
 #include <vector>
 
-class OglRenderBackend : public RenderBackend {
+class OglRenderDevice : public RenderDevice {
 public:
-    OglRenderBackend(glm::ivec2 windowSize);
+    OglRenderDevice(glm::ivec2 windowSize);
 
     MeshID createMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) noexcept override;
     TextureID createTexture(const Image& image) noexcept override;
@@ -25,13 +24,30 @@ public:
     glm::ivec2 getRenderTextureSize(RenderTextureID texture) noexcept override;
     size_t getGuiTexture(RenderTextureID texture) noexcept override;
 
+    void resizeDefaultFramebuffer(uint32_t width, uint32_t height) noexcept override;
+
+private:
+    friend class OglCommandBuffer;
+
+private:
+    std::vector<OglMesh> m_meshes;
+    std::vector<OglTexture> m_textures;
+    std::vector<OglRenderTexture> m_renderTextures;
+    std::vector<OglPipeline> m_pipelines;
+    std::vector<OglCubemap> m_cubemaps;
+
+    glm::ivec2 m_windowSize;
+};
+
+class OglCommandBuffer : public CommandBuffer {
+public:
+    OglCommandBuffer(OglRenderDevice& device);
+
     void bindTexture(TextureID texture, int slot = 0) noexcept override;
     void bindRenderTexture(RenderTextureID texture, int slot = 0) noexcept override;
     void bindFramebuffer(RenderTextureID texture) noexcept override;
     void bindDefaultFramebuffer() noexcept override;
     void bindPipeline(PipelineID pipeline) noexcept override;
-
-    void resizeDefaultFramebuffer(uint32_t width, uint32_t height) noexcept override;
 
     void drawMesh(MeshID mesh) noexcept override;
     void drawLines(const std::vector<Line>& lines) noexcept override;
@@ -45,13 +61,17 @@ private:
     void applyState(const RenderState& state) noexcept;
 
 private:
-    std::optional<PipelineID> m_bindedPipe;
+    OglRenderDevice& m_device;
+};
 
-    std::vector<OglMesh> m_meshes;
-    std::vector<OglTexture> m_textures;
-    std::vector<OglRenderTexture> m_renderTextures;
-    std::vector<OglPipeline> m_pipelines;
-    std::vector<OglCubemap> m_cubemaps;
+class OglRenderBackend : public RenderBackend {
+public:
+    OglRenderBackend(glm::ivec2 windowSize);
 
-    glm::ivec2 m_windowSize;
+    RenderDevice& getDevice() noexcept override;
+    CommandBuffer& getCommandBuffer() noexcept override;
+
+private:
+    OglRenderDevice m_device;
+    OglCommandBuffer m_commandBuffer;
 };
