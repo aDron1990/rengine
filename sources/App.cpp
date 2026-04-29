@@ -381,7 +381,13 @@ void App::run()
                 auto& body = m_registry.get<OrbitalBody>(entity);
                 ImGui::SeparatorText("OrbitalBody");
                 ImGui::BeginDisabled(simulateOrbital);
-                ImGui::DragScalarN("orbital velocity km/s", ImGuiDataType_Double, glm::value_ptr(body.velocityKmPerSec), 3, 0.00005);
+                if (ImGui::DragScalarN("orbital velocity km/s", ImGuiDataType_Double, glm::value_ptr(body.velocityKmPerSec), 3, 0.00005)) {
+                    if (m_registry.all_of<LineRenderer>(entity)) {
+                        auto center = m_registry.view<Celestial>().front();
+                        auto& lineRenderer = m_registry.get<LineRenderer>(entity);
+                        lineRenderer.lines = orbital.calcOrbit(entity, center);
+                    }
+                }
                 ImGui::EndDisabled();
                 ImGui::BeginDisabled(true);
                 auto vel = glm::length(body.velocityKmPerSec);
