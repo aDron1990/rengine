@@ -3,6 +3,7 @@
 #include "Object.hpp"
 #include "components/Camera.hpp"
 #include "components/Transform.hpp"
+#include <algorithm>
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 
@@ -33,7 +34,8 @@ void OrbitCamera::update() noexcept
 
     auto scroll = input.getScrollDelta();
     if (scroll) {
-        m_distance -= scroll->y;
+        const float zoomStep = std::max(m_minZoomStep, m_distance * m_zoomDistanceScale);
+        m_distance = std::max(m_minDistance, m_distance - scroll->y * zoomStep);
     }
 
     glm::vec3 offset;
